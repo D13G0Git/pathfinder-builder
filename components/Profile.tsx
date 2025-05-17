@@ -64,7 +64,7 @@ export default function Profile() {
 
       const { error } = await supabase
         .from('profiles')
-        .upsert(updates, { returning: 'minimal' });
+        .upsert(updates);
 
       if (error) throw error;
       setMessage('Perfil actualizado correctamente');
@@ -114,7 +114,12 @@ export default function Profile() {
         <button
           type="button"
           className="button signout-button"
-          onClick={signOut}
+          onClick={async () => {
+            const { error } = await signOut();
+            if (error) {
+              setMessage(error.message);
+            }
+          }}
         >
           Cerrar sesión
         </button>

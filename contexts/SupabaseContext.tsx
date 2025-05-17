@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../utils/supabase';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 
 type SupabaseContextType = {
   user: User | null;
@@ -13,7 +13,7 @@ type SupabaseContextType = {
     user: User | null;
     error: Error | null;
   }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: AuthError | null }>;
 };
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -64,7 +64,10 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       });
       return { user: data.user, error };
     },
-    signOut: () => supabase.auth.signOut(),
+    signOut: async () => {
+      const { error } = await supabase.auth.signOut();
+      return { error };
+    },
   };
 
   return (
