@@ -37,3 +37,25 @@ Pathfinder Builder es una aplicación web interactiva que te permite crear perso
 ## Licencia
 
 Este proyecto está licenciado bajo la [Licencia MIT](LICENSE).
+
+## Configuración del proyecto
+
+1. Clona este repositorio
+2. Instala las dependencias con `npm install`
+3. Configura las variables de entorno:
+   - Crea un archivo `.env.local` en la raíz del proyecto
+   - Añade las siguientes variables:
+     ```
+     # Supabase
+     NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+     
+     # Replicate - Servicio de generación de imágenes IA
+     REPLICATE_API_TOKEN=tu_token_api_replicate
+     ```
+   - Para obtener tu token de Replicate:
+     1. Regístrate en [Replicate](https://replicate.com/)
+     2. Ve a tu perfil y busca la sección de API tokens
+     3. Crea un nuevo token y cópialo en tu archivo `.env.local`
+
+4. Inicia el servidor de desarrollo con `npm run dev`

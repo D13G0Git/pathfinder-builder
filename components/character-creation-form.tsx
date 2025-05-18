@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Image from "next/image"
+import { Loader2 } from "lucide-react"
 
 // Opciones para la creación de personajes
 const classOptions = [
@@ -37,9 +39,14 @@ const raceOptions = [
   "Hobgoblin", "Kobold", "Orco", "Tengu"
 ]
 
+const genderOptions = [
+  "Masculino", "Femenino", "No binario"
+]
+
 export function CharacterCreationForm() {
   const [activeTab, setActiveTab] = useState<string>("manual")
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false)
   const [user, setUser] = useState<any>(null)
   const [jsonError, setJsonError] = useState<string | null>(null)
   const [importedCharacter, setImportedCharacter] = useState<PathfinderCharacter | null>(null)
@@ -52,6 +59,7 @@ export function CharacterCreationForm() {
     name: "",
     class: "Guerrero",
     race: "Humano",
+    gender: "Masculino",
     level: 1,
     avatar: "/placeholder.svg?height=100&width=100&text=Avatar",
     avatar_base64: ""
@@ -103,6 +111,110 @@ export function CharacterCreationForm() {
       reader.readAsDataURL(file)
     }
   }
+
+  const generateCharacterImage = async () => {
+    setIsGeneratingImage(true);
+    
+    try {
+      // Traducir género al inglés para el prompt
+      let genderInEnglish = "male";
+      if (characterData.gender === "Femenino") {
+        genderInEnglish = "female";
+      } else if (characterData.gender === "No binario") {
+        genderInEnglish = "non-binary";
+      }
+
+      // Traducir raza al inglés si es necesario
+      let raceInEnglish = characterData.race;
+      const raceTranslations: {[key: string]: string} = {
+        "Humano": "Human",
+        "Elfo": "Elf",
+        "Enano": "Dwarf",
+        "Halfling": "Halfling",
+        "Gnomo": "Gnome",
+        "Goblin": "Goblin",
+        "Hobgoblin": "Hobgoblin",
+        "Kobold": "Kobold",
+        "Orco": "Orc",
+        "Tengu": "Tengu"
+      };
+      
+      if (raceTranslations[characterData.race]) {
+        raceInEnglish = raceTranslations[characterData.race];
+      }
+
+      // Traducir clase al inglés si es necesario
+      let classInEnglish = characterData.class;
+      const classTranslations: {[key: string]: string} = {
+        "Alquimista": "Alchemist",
+        "Bárbaro": "Barbarian",
+        "Bardo": "Bard",
+        "Campeón": "Champion",
+        "Clérigo": "Cleric",
+        "Druida": "Druid",
+        "Explorador": "Ranger",
+        "Guerrero": "Fighter",
+        "Hechicero": "Sorcerer",
+        "Mago": "Wizard",
+        "Monje": "Monk",
+        "Pícaro": "Rogue"
+      };
+      
+      if (classTranslations[characterData.class]) {
+        classInEnglish = classTranslations[characterData.class];
+      }
+
+      // Generar el prompt para la API con más detalles para mejorar la calidad
+      const prompt = `High quality portrait of a ${genderInEnglish} ${raceInEnglish} ${classInEnglish} character for Pathfinder RPG, detailed fantasy art, professional lighting, 4k`;
+      
+      // Llamar a nuestra API personalizada
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al generar la imagen');
+      }
+      
+      const data = await response.json();
+      
+      if (data.imageUrl) {
+        // Convertir la URL de la imagen a base64
+        const imageResponse = await fetch(data.imageUrl);
+        const blob = await imageResponse.blob();
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          setCharacterData(prev => ({
+            ...prev,
+            avatar_base64: base64data
+          }));
+        };
+        reader.readAsDataURL(blob);
+        
+        toast({
+          title: "¡Imagen generada!",
+          description: "Se ha creado una imagen para tu personaje.",
+        });
+      } else {
+        throw new Error('No se recibió URL de imagen');
+      }
+    } catch (error: any) {
+      console.error("Error al generar la imagen:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo generar la imagen. " + (error.message || error),
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const handleJsonImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     setJsonError(null)
@@ -163,6 +275,7 @@ export function CharacterCreationForm() {
           name: characterData.name,
           class: characterData.class,
           race: characterData.race,
+          gender: characterData.gender,
           level: characterData.level,
           avatar: characterData.avatar,
           avatar_base64: characterData.avatar_base64 || null,
@@ -273,16 +386,71 @@ export function CharacterCreationForm() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label htmlFor="avatar">Avatar (opcional)</Label>
+                    <Label htmlFor="gender">Género</Label>
+                    <Select 
+                      value={characterData.gender} 
+                      onValueChange={(value) => handleSelectChange("gender", value)}
+                    >
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Selecciona un género" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {genderOptions.map((gender) => (
+                          <SelectItem key={gender} value={gender}>
+                            {gender}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="avatar">Avatar</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={generateCharacterImage}
+                        disabled={isGeneratingImage || !characterData.name}
+                        size="sm"
+                      >
+                        {isGeneratingImage ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generando...
+                          </>
+                        ) : "Generar imagen"}
+                      </Button>
+                    </div>
+                    
+                    {characterData.avatar_base64 ? (
+                      <div className="relative w-full h-64 border rounded-md overflow-hidden">
+                        <Image 
+                          src={characterData.avatar_base64} 
+                          alt="Avatar del personaje"
+                          fill
+                          style={{ objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-64 border rounded-md flex items-center justify-center bg-muted">
+                        <p className="text-muted-foreground">
+                          {isGeneratingImage 
+                            ? "Generando imagen..." 
+                            : "Genera una imagen para tu personaje o sube una propia"}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O sube tu propia imagen
+                    </p>
                     <Input 
                       id="avatar" 
                       type="file" 
                       accept="image/*"
                       onChange={handleAvatarChange}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Selecciona una imagen para tu personaje
-                    </p>
                   </div>
                   
                   <Button type="submit" className="w-full" disabled={isLoading}>
