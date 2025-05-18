@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ScrollText, Settings, Home, Map, Sword, Shield, Menu, X } from "lucide-react"
+import { Settings, Home, Map, Sword, Shield, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -37,12 +37,6 @@ export function Sidebar({ className }: SidebarProps) {
       icon: Sword,
       href: "/characters",
       active: pathname === "/characters",
-    },
-    {
-      label: "Inventory",
-      icon: ScrollText,
-      href: "/inventory",
-      active: pathname === "/inventory",
     },
     {
       label: "Game",

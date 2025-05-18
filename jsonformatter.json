@@ -1,0 +1,309 @@
+{
+  "success": true,
+  "build": {
+    "name": "Prueba_Diego",
+    "class": "Fighter",
+    "dualClass": null,
+    "level": 1,
+    "ancestry": "Human",
+    "heritage": "Versatile Heritage",
+    "background": "Gladiator",
+    "alignment": "N",
+    "gender": "Not set",
+    "age": "Not set",
+    "deity": "Not set",
+    "size": 2,
+    "sizeName": "Medium",
+    "keyability": "str",
+    "languages": [
+      "None selected"
+    ],
+    "rituals": [],
+    "resistances": [],
+    "inventorMods": [],
+    "abilities": {
+      "str": 18,
+      "dex": 12,
+      "con": 16,
+      "int": 10,
+      "wis": 12,
+      "cha": 10,
+      "breakdown": {
+        "ancestryFree": [
+          "Str",
+          "Con"
+        ],
+        "ancestryBoosts": [],
+        "ancestryFlaws": [],
+        "backgroundBoosts": [
+          "Str",
+          "Con"
+        ],
+        "classBoosts": [
+          "Str"
+        ],
+        "mapLevelledBoosts": {
+          "1": [
+            "Str",
+            "Con",
+            "Dex",
+            "Wis"
+          ]
+        }
+      }
+    },
+    "attributes": {
+      "ancestryhp": 8,
+      "classhp": 10,
+      "bonushp": 0,
+      "bonushpPerLevel": 0,
+      "speed": 25,
+      "speedBonus": 5
+    },
+    "proficiencies": {
+      "classDC": 2,
+      "perception": 4,
+      "fortitude": 4,
+      "reflex": 4,
+      "will": 2,
+      "heavy": 2,
+      "medium": 2,
+      "light": 2,
+      "unarmored": 2,
+      "advanced": 2,
+      "martial": 4,
+      "simple": 4,
+      "unarmed": 4,
+      "castingArcane": 0,
+      "castingDivine": 0,
+      "castingOccult": 0,
+      "castingPrimal": 0,
+      "acrobatics": 2,
+      "arcana": 0,
+      "athletics": 2,
+      "crafting": 0,
+      "deception": 0,
+      "diplomacy": 0,
+      "intimidation": 0,
+      "medicine": 0,
+      "nature": 0,
+      "occultism": 0,
+      "performance": 2,
+      "religion": 0,
+      "society": 0,
+      "stealth": 0,
+      "survival": 0,
+      "thievery": 2
+    },
+    "mods": {},
+    "feats": [
+      [
+        "Shield Block",
+        null,
+        "Awarded Feat",
+        1
+      ],
+      [
+        "Impressive Performance",
+        null,
+        "Awarded Feat",
+        1
+      ],
+      [
+        "Versatile Heritage",
+        null,
+        "Heritage",
+        1,
+        "Heritage Feat",
+        "parentChoice",
+        null
+      ],
+      [
+        "Fleet",
+        null,
+        "General Feat",
+        1,
+        "Heritage Featversatile heritage",
+        "childChoice",
+        "Heritage Feat"
+      ],
+      [
+        "Power Attack",
+        null,
+        "Class Feat",
+        1,
+        "Fighter Feat 1",
+        "standardChoice",
+        null
+      ],
+      [
+        "Natural Ambition",
+        null,
+        "Ancestry Feat",
+        1,
+        "Human Feat 1",
+        "parentChoice",
+        null
+      ],
+      [
+        "Double Slice",
+        null,
+        "Class Feat",
+        1,
+        "Natural Ambition Class FeatHuman Feat 1",
+        "childChoice",
+        "Human Feat 1"
+      ]
+    ],
+    "specials": [
+      "Attack of Opportunity",
+      "Versatile Heritage"
+    ],
+    "lores": [
+      [
+        "Gladiatorial",
+        2
+      ]
+    ],
+    "equipmentContainers": {
+      "82b9be15-ce85-4b3e-984b-b3c3e20a068b": {
+        "containerName": "Backpack",
+        "bagOfHolding": false,
+        "backpack": true
+      }
+    },
+    "equipment": [
+      [
+        "Backpack",
+        1,
+        "Invested"
+      ],
+      [
+        "Bedroll",
+        1,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Chalk",
+        10,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Flint and Steel",
+        1,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Rope",
+        1,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Rations",
+        2,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Torch",
+        5,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Waterskin",
+        1,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Soap",
+        1,
+        "82b9be15-ce85-4b3e-984b-b3c3e20a068b",
+        "Invested"
+      ],
+      [
+        "Climbing Kit (Extreme)",
+        1,
+        "Invested"
+      ],
+      [
+        "Clothing (Fine)",
+        1,
+        "Invested"
+      ]
+    ],
+    "specificProficiencies": {
+      "trained": [],
+      "expert": [],
+      "master": [],
+      "legendary": []
+    },
+    "weapons": [
+      {
+        "name": "Greatsword",
+        "qty": 1,
+        "prof": "martial",
+        "die": "d12",
+        "pot": 0,
+        "str": "",
+        "mat": null,
+        "display": "Greatsword",
+        "runes": [],
+        "damageType": "S",
+        "attack": 9,
+        "damageBonus": 4,
+        "extraDamage": [],
+        "increasedDice": false,
+        "isInventor": false
+      }
+    ],
+    "money": {
+      "cp": 0,
+      "sp": 0,
+      "gp": 100,
+      "pp": 0
+    },
+    "armor": [
+      {
+        "name": "Breastplate",
+        "qty": 1,
+        "prof": "medium",
+        "pot": 0,
+        "res": "",
+        "mat": null,
+        "display": "Breastplate",
+        "worn": true,
+        "runes": []
+      },
+      {
+        "name": "Steel Shield",
+        "qty": 1,
+        "prof": "shield",
+        "pot": 0,
+        "res": "",
+        "mat": null,
+        "display": "",
+        "worn": true,
+        "runes": []
+      }
+    ],
+    "spellCasters": [],
+    "focusPoints": 0,
+    "focus": {},
+    "formula": [],
+    "acTotal": {
+      "acProfBonus": 3,
+      "acAbilityBonus": 1,
+      "acItemBonus": 4,
+      "acTotal": 18,
+      "shieldBonus": "2"
+    },
+    "pets": [],
+    "familiars": []
+  }
+}
