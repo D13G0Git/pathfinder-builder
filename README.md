@@ -1,63 +1,39 @@
-# Next + Netlify Starter
+# Pathfinder Builder
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/46648482-644c-4c80-bafb-872057e51b6b/deploy-status)](https://app.netlify.com/sites/next-dev-starter/deploys)
+Un creador de personajes narrativo para Pathfinder 2e, donde tu historia determina tu aventura.
 
-This is a [Next.js](https://nextjs.org/) v15 project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) and set up to be instantly deployed to [Netlify](https://url.netlify.com/SyTBPVamO)!
+## Descripción
 
-This project is a very minimal starter that includes 2 sample components, a global stylesheet, a `netlify.toml` for deployment, and a `jsconfig.json` for setting up absolute imports and aliases. With Netlify, you'll have access to features like Preview Mode, server-side rendering/incremental static regeneration via Netlify Functions, and internationalized routing on deploy automatically.
+Pathfinder Builder es una aplicación web interactiva que te permite crear personajes para Pathfinder 2e a través de una experiencia narrativa. En lugar de simplemente elegir estadísticas, vivirás una historia donde tus decisiones darán forma a tu personaje.
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/netlify-templates/next-netlify-starter&utm_source=github&utm_medium=nextstarter-cs&utm_campaign=devex-cs)
+## Características principales
 
-(If you click this button, it will create a new repo for you that looks exactly like this one, and sets that repo up immediately for deployment on Netlify)
+- **Experiencia narrativa**: Crea tu personaje a través de una historia interactiva con múltiples elecciones que impactan en las características finales.
+- **Compatibilidad con FoundryVTT**: Exporta tu personaje en formato JSON para importarlo directamente en FoundryVTT.
+- **Biblioteca de personajes**: Revisa tus personajes creados anteriormente y descubre personajes creados por otros usuarios.
+- **Interfaz intuitiva**: Diseño moderno y fácil de usar que te guía a través de toda la experiencia de creación.
 
-## Table of Contents:
+## Cómo empezar
 
-- [Getting Started](#getting-started)
-- [Installation options](#installation-options)
-- [Testing](#testing)
-  - [Included Default Testing](#included-default-testing)
-  - [Removing Renovate](#removing-renovate)
+1. Accede a la aplicación web
+2. Inicia una nueva historia
+3. Toma decisiones que moldearán tu personaje
+4. Al final de la experiencia, obtendrás una hoja de personaje completa
+5. Exporta tu personaje para usarlo en FoundryVTT o guárdalo en tu biblioteca
 
-## Getting Started
+## Tecnologías utilizadas
 
-First, run the development server:
+- Next.js
+- Tailwind CSS
+- FoundryVTT API compatible
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+## Contribuciones
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+¿Interesado en contribuir? ¡Genial! Siéntete libre de:
+- Reportar errores
+- Sugerir nuevas características
+- Enviar pull requests
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## Licencia
 
-### Installation options
-
-**Option one:** One-click deploy
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/netlify-templates/next-netlify-starter&utm_source=github&utm_medium=nextstarter-cs&utm_campaign=devex-cs)
-
-**Option two:** Manual clone
-
-1. Clone this repo: `git clone https://github.com/netlify-templates/next-netlify-starter.git`
-2. Navigate to the directory and run `npm install`
-3. Run `npm run dev`
-4. Make your changes
-5. Connect to [Netlify](https://url.netlify.com/Bk4UicocL) manually (the `netlify.toml` file is the one you'll need to make sure stays intact to make sure the export is done and pointed to the right stuff)
-
-## Testing
-
-### Included Default Testing
-
-We’ve included some tooling that helps us maintain these templates. This template currently uses:
-
-- [Renovate](https://www.mend.io/free-developer-tools/renovate/) - to regularly update our dependencies
-- [Cypress](https://www.cypress.io/) - to run tests against how the template runs in the browser
-- [Cypress Netlify Build Plugin](https://github.com/cypress-io/netlify-plugin-cypress) - to run our tests during our build process
-
-If your team is not interested in this tooling, you can remove them with ease!
-
-### Removing Renovate
-
-In order to keep our project up-to-date with dependencies we use a tool called [Renovate](https://github.com/marketplace/renovate). If you’re not interested in this tooling, delete the `renovate.json` file and commit that onto your main branch.
+Este proyecto está licenciado bajo la [Licencia MIT](LICENSE).
