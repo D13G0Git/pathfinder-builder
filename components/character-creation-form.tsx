@@ -1,5 +1,11 @@
 "use client"
 
+// NOTA: Este componente requiere que se configure un bucket en Supabase Storage
+// llamado 'character-avatars' con las siguientes configuraciones:
+// - Bucket público: true (para poder acceder a las URLs públicas)
+// - Allowed MIME types: image/* 
+// - Max file size: 5MB
+
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -40,7 +46,7 @@ const raceOptions = [
 ]
 
 const genderOptions = [
-  "Masculino", "Femenino", "No binario"
+  "Masculino", "Femenino", "Otro"
 ]
 
 export function CharacterCreationForm() {
@@ -61,8 +67,7 @@ export function CharacterCreationForm() {
     race: "Humano",
     gender: "Masculino",
     level: 1,
-    avatar: "/placeholder.svg?height=100&width=100&text=Avatar",
-    avatar_base64: ""
+    avatar: ""
   })
 
   // Comprobar si el usuario está autenticado
@@ -94,21 +99,78 @@ export function CharacterCreationForm() {
     setCharacterData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      const reader = new FileReader()
       
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCharacterData(prev => ({
-            ...prev,
-            avatar_base64: event.target!.result as string
-          }))
-        }
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Por favor selecciona un archivo de imagen válido.",
+        });
+        return;
       }
       
-      reader.readAsDataURL(file)
+      // Validar tamaño (5MB máximo)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "El archivo es demasiado grande. Máximo 5MB.",
+        });
+        return;
+      }
+
+      try {
+        setIsGeneratingImage(true); // Reutilizar el estado de loading
+        
+        // Generar un nombre único para el archivo
+        const fileExtension = file.name.split('.').pop() || 'png';
+        const fileName = `character-${user?.id}-${Date.now()}.${fileExtension}`;
+        const filePath = `avatars/${fileName}`;
+        
+        // Subir la imagen a Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('character-avatars')
+          .upload(filePath, file, {
+            contentType: file.type,
+            upsert: false
+          });
+
+        if (uploadError) {
+          throw new Error(`Error al subir imagen: ${uploadError.message}`);
+        }
+
+        // Obtener la URL pública de la imagen
+        const { data: publicUrlData } = supabase.storage
+          .from('character-avatars')
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
+          setCharacterData(prev => ({
+            ...prev,
+            avatar: publicUrlData.publicUrl
+          }));
+          
+          toast({
+            title: "¡Imagen subida!",
+            description: "Tu imagen ha sido subida exitosamente.",
+          });
+        } else {
+          throw new Error('No se pudo obtener la URL pública de la imagen');
+        }
+      } catch (error: any) {
+        console.error("Error al subir la imagen:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo subir la imagen. " + (error.message || error),
+        });
+      } finally {
+        setIsGeneratingImage(false);
+      }
     }
   }
 
@@ -120,8 +182,8 @@ export function CharacterCreationForm() {
       let genderInEnglish = "male";
       if (characterData.gender === "Femenino") {
         genderInEnglish = "female";
-      } else if (characterData.gender === "No binario") {
-        genderInEnglish = "non-binary";
+      } else if (characterData.gender === "Otro") {
+        genderInEnglish = "undefined";
       }
 
       // Traducir raza al inglés si es necesario
@@ -183,24 +245,50 @@ export function CharacterCreationForm() {
       const data = await response.json();
       
       if (data.imageUrl) {
-        // Convertir la URL de la imagen a base64
+        // Obtener la imagen directamente desde la URL de Replicate
         const imageResponse = await fetch(data.imageUrl);
-        const blob = await imageResponse.blob();
         
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64data = reader.result as string;
+        if (!imageResponse.ok) {
+          throw new Error('Error al obtener la imagen generada');
+        }
+
+        // Obtener el blob de la imagen para subirla a Supabase
+        const imageBlob = await imageResponse.blob();
+        
+        // Generar un nombre único para el archivo
+        const fileName = `character-${user?.id}-${Date.now()}.png`;
+        const filePath = `avatars/${fileName}`;
+        
+        // Subir la imagen a Supabase Storage usando la URL de Replicate
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('character-avatars')
+          .upload(filePath, imageBlob, {
+            contentType: 'image/png',
+            upsert: false
+          });
+
+        if (uploadError) {
+          throw new Error(`Error al subir imagen: ${uploadError.message}`);
+        }
+
+        // Obtener la URL pública de la imagen desde Supabase Storage
+        const { data: publicUrlData } = supabase.storage
+          .from('character-avatars')
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
           setCharacterData(prev => ({
             ...prev,
-            avatar_base64: base64data
+            avatar: publicUrlData.publicUrl
           }));
-        };
-        reader.readAsDataURL(blob);
-        
-        toast({
-          title: "¡Imagen generada!",
-          description: "Se ha creado una imagen para tu personaje.",
-        });
+          
+          toast({
+            title: "¡Imagen generada!",
+            description: "Se ha creado y subido una imagen para tu personaje.",
+          });
+        } else {
+          throw new Error('No se pudo obtener la URL pública de la imagen');
+        }
       } else {
         throw new Error('No se recibió URL de imagen');
       }
@@ -277,8 +365,7 @@ export function CharacterCreationForm() {
           race: characterData.race,
           gender: characterData.gender,
           level: characterData.level,
-          avatar: characterData.avatar,
-          avatar_base64: characterData.avatar_base64 || null,
+          avatar: characterData.avatar || null,
           character_data: importedCharacter || null
         })
         .select('id')  // Solo necesitamos el ID para confirmar
@@ -423,10 +510,10 @@ export function CharacterCreationForm() {
                       </Button>
                     </div>
                     
-                    {characterData.avatar_base64 ? (
+                    {characterData.avatar ? (
                       <div className="relative w-full h-64 border rounded-md overflow-hidden">
                         <Image 
-                          src={characterData.avatar_base64} 
+                          src={characterData.avatar} 
                           alt="Avatar del personaje"
                           fill
                           style={{ objectFit: 'contain' }}
@@ -434,9 +521,9 @@ export function CharacterCreationForm() {
                       </div>
                     ) : (
                       <div className="w-full h-64 border rounded-md flex items-center justify-center bg-muted">
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground text-center px-4">
                           {isGeneratingImage 
-                            ? "Generando imagen..." 
+                            ? "Generando y subiendo imagen..." 
                             : "Genera una imagen para tu personaje o sube una propia"}
                         </p>
                       </div>
