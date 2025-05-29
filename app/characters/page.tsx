@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Loader2, Trash2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { Sidebar } from "@/components/sidebar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import Image from "next/image"
 
 interface Character {
   id: string
@@ -188,9 +190,11 @@ export default function CharactersPage() {
         {character.avatar && (
           <div className="px-6 pb-3">
             <div className="relative w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-              <img
+              <Image
                 src={character.avatar}
                 alt={character.name}
+                width={64}
+                height={64}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -307,99 +311,109 @@ export default function CharactersPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-10">
-        <div className="ml-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-4">Personajes</h1>
-          <p className="text-muted-foreground">Gestiona tus personajes y sus habilidades.</p>
-        </div>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-muted-foreground">Cargando personajes...</div>
-        </div>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 md:ml-64">
+          <div className="p-6 space-y-10">
+            <div className="ml-8">
+              <h1 className="text-3xl font-bold tracking-tight mb-4">Personajes</h1>
+              <p className="text-muted-foreground">Gestiona tus personajes y sus habilidades.</p>
+            </div>
+            <div className="flex justify-center items-center h-64">
+              <div className="text-lg text-muted-foreground">Cargando personajes...</div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="m-4">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Personajes</h1>
-        <p className="text-muted-foreground">Gestiona tus personajes y sus habilidades.</p>
-        {characters.length > 0 && (
-          <p className="text-sm text-muted-foreground mt-2">
-            Total: {characters.length} personaje{characters.length !== 1 ? 's' : ''}
-          </p>
-        )}
-      </div>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 md:ml-64">
+        <div className="p-6 space-y-6">
+          <div className="m-4">
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Personajes</h1>
+            <p className="text-muted-foreground">Gestiona tus personajes y sus habilidades.</p>
+            {characters.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Total: {characters.length} personaje{characters.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="m-4">
-          <TabsTrigger value="all">
-            Todos los Personajes ({characters.length})
-          </TabsTrigger>
-          <TabsTrigger value="active">
-            Grupo Activo ({activeCharacters.length})
-          </TabsTrigger>
-          <TabsTrigger value="retired">
-            Retirados ({retiredCharacters.length})
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="space-y-4">
-          {characters.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="m-4 rounded-full bg-gray-100 dark:bg-gray-800 p-4 w-16 h-16 mx-auto flex items-center justify-center">
-                <Plus className="h-8 w-8 text-gray-600 dark:text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium mb-2">No tienes personajes</h3>
-              <p className="text-muted-foreground mb-6">
-                Crea tu primer personaje para comenzar tu aventura en Pathfinder
-              </p>
-              <Button 
-                onClick={() => router.push("/character-create")}
-                className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Crear Primer Personaje
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {characters.map(renderCharacterCard)}
-              {renderCreateCharacterCard()}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="active" className="space-y-4">
-          {activeCharacters.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">No hay personajes activos</h3>
-              <p className="text-muted-foreground">
-                Todos tus personajes están disponibles para aventuras
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {activeCharacters.map(renderCharacterCard)}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="retired" className="space-y-4">
-          {retiredCharacters.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">No hay personajes retirados</h3>
-              <p className="text-muted-foreground">
-                Los personajes retirados aparecerán aquí
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {retiredCharacters.map(renderCharacterCard)}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="m-4">
+              <TabsTrigger value="all">
+                Todos los Personajes ({characters.length})
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Grupo Activo ({activeCharacters.length})
+              </TabsTrigger>
+              <TabsTrigger value="retired">
+                Retirados ({retiredCharacters.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="space-y-4">
+              {characters.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="m-4 rounded-full bg-gray-100 dark:bg-gray-800 p-4 w-16 h-16 mx-auto flex items-center justify-center">
+                    <Plus className="h-8 w-8 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No tienes personajes</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Crea tu primer personaje para comenzar tu aventura en Pathfinder
+                  </p>
+                  <Button 
+                    onClick={() => router.push("/character-create")}
+                    className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear Primer Personaje
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {characters.map(renderCharacterCard)}
+                  {renderCreateCharacterCard()}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="active" className="space-y-4">
+              {activeCharacters.length === 0 ? (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium mb-2">No hay personajes activos</h3>
+                  <p className="text-muted-foreground">
+                    Todos tus personajes están disponibles para aventuras
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {activeCharacters.map(renderCharacterCard)}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="retired" className="space-y-4">
+              {retiredCharacters.length === 0 ? (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium mb-2">No hay personajes retirados</h3>
+                  <p className="text-muted-foreground">
+                    Los personajes retirados aparecerán aquí
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {retiredCharacters.map(renderCharacterCard)}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   )
 }

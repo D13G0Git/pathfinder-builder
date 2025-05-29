@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,8 +10,33 @@ import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { Sidebar } from "@/components/sidebar"
+import { Play, Pause, Music, Volume2 } from "lucide-react"
+
+// Lista de pistas de música ambiente disponibles
+const musicTracks = [
+  {
+    id: "tavern",
+    name: "Taberna Medieval",
+    url: "/music/02. Geralt Of Rivia.mp3", 
+    description: "Ambiente relajante de taberna"
+  },
+  {
+    id: "adventure",
+    name: "Música de Aventura",
+    url: "/music/12. The Nightingale.mp3", 
+    description: "Épica música de fondo para aventuras"
+  },
+  {
+    id: "dungeon",
+    name: "Ambiente de Mazmorra",
+    url: "/music/21. The Vagabond.mp3", 
+    description: "Sonidos misteriosos y sombríos"
+  }
+]
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
@@ -26,6 +51,12 @@ export default function SettingsPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  
+  // Estados para la música
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTrack, setCurrentTrack] = useState(musicTracks[0]?.id || "tavern")
+  const [musicEnabled, setMusicEnabled] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Cargar información del usuario autenticado
   useEffect(() => {
@@ -59,17 +90,169 @@ export default function SettingsPage() {
   // Evitar hidration mismatch
   useEffect(() => {
     setMounted(true)
-    // Cargar volumen desde localStorage si existe
+    // Cargar configuraciones desde localStorage
     const savedVolume = localStorage.getItem("app-volume")
+    const savedMusicEnabled = localStorage.getItem("music-enabled")
+    const savedCurrentTrack = localStorage.getItem("current-track")
+    
     if (savedVolume) {
       setVolume(parseInt(savedVolume))
+    }
+    if (savedMusicEnabled) {
+      setMusicEnabled(savedMusicEnabled === "true")
+    }
+    if (savedCurrentTrack) {
+      setCurrentTrack(savedCurrentTrack)
+    }
+  }, [])
+
+  // Efecto para controlar el volumen del audio
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100
+    }
+  }, [volume])
+
+  // Efecto para cambiar la pista de música
+  useEffect(() => {
+    if (audioRef.current && musicEnabled) {
+      const selectedTrack = musicTracks.find(track => track.id === currentTrack)
+      if (selectedTrack) {
+        // Pausar y resetear el audio actual antes de cambiar src
+        if (!audioRef.current.paused) {
+          audioRef.current.pause()
+        }
+        audioRef.current.currentTime = 0
+        
+        // Cambiar la fuente
+        audioRef.current.src = selectedTrack.url
+        
+        // Solo reproducir si debería estar reproduciéndose
+        if (isPlaying) {
+          // Esperar a que esté listo antes de reproducir
+          audioRef.current.addEventListener('loadeddata', () => {
+            audioRef.current?.play().catch((error) => {
+              console.error("Error al reproducir audio:", error)
+              setIsPlaying(false)
+            })
+          }, { once: true })
+        }
+      }
+    }
+  }, [currentTrack, musicEnabled])
+
+  // Efecto separado para controlar play/pause sin cambiar la pista
+  useEffect(() => {
+    if (audioRef.current && musicEnabled) {
+      if (isPlaying && audioRef.current.paused) {
+        audioRef.current.play().catch((error) => {
+          console.error("Error al reproducir audio:", error)
+          setIsPlaying(false)
+        })
+      } else if (!isPlaying && !audioRef.current.paused) {
+        audioRef.current.pause()
+      }
+    }
+  }, [isPlaying, musicEnabled])
+
+  // Efecto para configurar los event listeners del audio
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleLoadStart = () => {
+      // Audio está comenzando a cargar
+    }
+
+    const handleLoadedData = () => {
+      // Audio está listo para reproducirse
+    }
+
+    const handleError = (e: Event) => {
+      console.error("Error de audio:", e)
+      setIsPlaying(false)
+    }
+
+    const handleAbort = () => {
+      // Manejo silencioso del abort - esto es normal cuando cambiamos de pista
+      setIsPlaying(false)
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false)
+    }
+
+    // Agregar event listeners
+    audio.addEventListener('loadstart', handleLoadStart)
+    audio.addEventListener('loadeddata', handleLoadedData)
+    audio.addEventListener('error', handleError)
+    audio.addEventListener('abort', handleAbort)
+    audio.addEventListener('ended', handleEnded)
+
+    // Cleanup
+    return () => {
+      audio.removeEventListener('loadstart', handleLoadStart)
+      audio.removeEventListener('loadeddata', handleLoadedData)
+      audio.removeEventListener('error', handleError)
+      audio.removeEventListener('abort', handleAbort)
+      audio.removeEventListener('ended', handleEnded)
     }
   }, [])
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0]
-    setVolume(newVolume)
-    localStorage.setItem("app-volume", newVolume.toString())
+    if (newVolume !== undefined) {
+      setVolume(newVolume)
+      localStorage.setItem("app-volume", newVolume.toString())
+    }
+  }
+
+  const toggleMusic = () => {
+    if (!musicEnabled) {
+      toast.info("Música activada", {
+        description: "La música de fondo está ahora habilitada"
+      })
+      setMusicEnabled(true)
+      localStorage.setItem("music-enabled", "true")
+      return
+    }
+
+    if (audioRef.current) {
+      if (isPlaying) {
+        setIsPlaying(false)
+        toast.info("Música pausada")
+      } else {
+        setIsPlaying(true)
+        toast.success("Reproduciendo música")
+      }
+    }
+  }
+
+  const handleTrackChange = (trackId: string) => {
+    setCurrentTrack(trackId)
+    localStorage.setItem("current-track", trackId)
+    
+    const selectedTrack = musicTracks.find(track => track.id === trackId)
+    if (selectedTrack) {
+      toast.info("Pista cambiada", {
+        description: `Ahora reproduciendo: ${selectedTrack.name}`
+      })
+    }
+  }
+
+  const toggleMusicEnabled = (enabled: boolean) => {
+    setMusicEnabled(enabled)
+    localStorage.setItem("music-enabled", enabled.toString())
+    
+    if (!enabled && isPlaying) {
+      audioRef.current?.pause()
+      setIsPlaying(false)
+      toast.info("Música desactivada")
+    } else if (enabled) {
+      toast.info("Música activada", {
+        description: "Ahora puedes reproducir música de fondo"
+      })
+    }
   }
 
   const handlePasswordChange = async () => {
@@ -170,16 +353,24 @@ export default function SettingsPage() {
 
   if (!mounted || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-muted-foreground">Cargando...</div>
-        </div>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 md:ml-64">
+          <div className="container mx-auto px-4 py-8 max-w-2xl">
+            <div className="flex justify-center items-center h-64">
+              <div className="text-lg text-muted-foreground">Cargando...</div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 md:ml-64">
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Ajustes</h1>
         <p className="text-muted-foreground">Personaliza tu experiencia de juego y gestiona tu cuenta.</p>
@@ -202,28 +393,28 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Cambio de Tema */}
-            <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
               <Label htmlFor="theme-toggle" className="flex flex-col gap-1">
                 <span className="font-medium">Tema Oscuro</span>
-                <span className="font-normal text-xs text-muted-foreground">
+                  <span className="font-normal text-xs text-muted-foreground">
                   Alterna entre modo claro y oscuro
-                </span>
-              </Label>
-              <Switch
+                  </span>
+                </Label>
+                <Switch
                 id="theme-toggle"
                 checked={theme === "dark"}
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-              />
-            </div>
+                />
+              </div>
 
             {/* Control de Volumen */}
             <div className="space-y-3">
               <Label htmlFor="volume" className="flex flex-col gap-1">
                 <span className="font-medium">Volumen de la Aplicación</span>
-                <span className="font-normal text-xs text-muted-foreground">
+                  <span className="font-normal text-xs text-muted-foreground">
                   Controla el volumen general de sonidos y música
-                </span>
-              </Label>
+                  </span>
+                </Label>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>🔇 Silencio</span>
@@ -240,6 +431,100 @@ export default function SettingsPage() {
                   className="w-full"
                 />
               </div>
+            </div>
+
+            {/* Control de Música */}
+            <div className="space-y-3">
+              <Label className="flex flex-col gap-1">
+                <span className="font-medium flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  Música de Fondo
+                </span>
+                <span className="font-normal text-xs text-muted-foreground">
+                  Reproduce música ambiente mientras usas la aplicación
+                </span>
+              </Label>
+              
+              {/* Switch para habilitar música */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-sm font-medium">Habilitar Música</span>
+                  <p className="text-xs text-muted-foreground">Activa la reproducción de música de fondo</p>
+                </div>
+                <Switch
+                  checked={musicEnabled}
+                  onCheckedChange={toggleMusicEnabled}
+                />
+              </div>
+
+              {/* Controles de música */}
+              {musicEnabled && (
+                <div className="space-y-4 pt-2 border-t">
+                  {/* Selector de pista */}
+                  <div className="space-y-2">
+                    <Label htmlFor="track-select" className="text-sm font-medium">
+                      Seleccionar Pista
+                    </Label>
+                    <Select value={currentTrack} onValueChange={handleTrackChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Elige una pista de música" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {musicTracks.map((track) => (
+                          <SelectItem key={track.id} value={track.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{track.name}</span>
+                              <span className="text-xs text-muted-foreground">{track.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Controles de reproducción */}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      onClick={toggleMusic}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {isPlaying ? (
+                        <>
+                          <Pause className="h-4 w-4" />
+                          Pausar
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          Reproducir
+                        </>
+                      )}
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 flex-1">
+                      <Volume2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Volumen: {volume}%</span>
+                    </div>
+                  </div>
+
+                  {/* Estado actual */}
+                  <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded">
+                    {isPlaying ? (
+                      <span className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        Reproduciendo: {musicTracks.find(t => t.id === currentTrack)?.name}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        Música en pausa
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -438,9 +723,9 @@ export default function SettingsPage() {
                 <div>
                   <div className="font-medium text-sm">Idiomas</div>
                   <div className="text-xs text-muted-foreground">Soporte para múltiples idiomas</div>
-                </div>
               </div>
-              
+            </div>
+
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                 <div className="text-lg">🎮</div>
                 <div>
@@ -449,7 +734,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="pt-2 text-center">
               <p className="text-sm text-muted-foreground">
                 Estamos trabajando constantemente para mejorar tu experiencia.
@@ -471,6 +756,33 @@ export default function SettingsPage() {
           </Button>
         </div>
       </div>
-    </div>
-  )
-}
+        </div>
+        </main>
+
+        {/* Elemento de audio oculto para reproducir música */}
+        {musicEnabled && (
+          <audio
+            ref={audioRef}
+            loop
+            preload="metadata"
+            onLoadedData={() => {
+              if (audioRef.current) {
+                audioRef.current.volume = volume / 100
+              }
+            }}
+            onError={(error) => {
+              console.error("Error al cargar audio:", error)
+              setIsPlaying(false)
+              toast.error("Error de audio", {
+                description: "No se pudo cargar la pista de música seleccionada"
+              })
+            }}
+            onAbort={() => {
+              // Manejo silencioso del abort - esto es normal cuando cambiamos de pista
+              // No mostrar error al usuario
+            }}
+          />
+        )}
+      </div>
+    )
+  }

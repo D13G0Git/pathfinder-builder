@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // Crear un contexto para la autenticación
 type AuthContextType = {
@@ -21,26 +21,40 @@ export const useAuth = () => useContext(AuthContext)
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Usar el cliente correcto de Supabase
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
+    console.log("🏠 [Provider] Inicializando proveedor de Supabase...")
+    
     // Obtener el usuario actual
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      setIsLoading(false)
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        console.log("🏠 [Provider] Usuario inicial:", user ? user.email : "No autenticado")
+        setUser(user)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("🏠 [Provider] Error al obtener usuario:", error)
+        setIsLoading(false)
+      }
     }
 
     getUser()
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        console.log("🏠 [Provider] Cambio de estado de auth:", event)
+        console.log("🏠 [Provider] Nueva sesión:", session ? "Existe" : "No existe")
         setUser(session?.user ?? null)
         setIsLoading(false)
       }
     )
 
     return () => {
+      console.log("🏠 [Provider] Limpiando suscripción...")
       subscription.unsubscribe()
     }
   }, [])

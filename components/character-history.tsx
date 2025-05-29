@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Loader2, Trash2 } from "lucide-react"
+import { Loader2, Trash2, Plus } from "lucide-react"
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 interface CharacterHistoryProps {
   characterId?: string
@@ -96,7 +104,7 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
   }, [characterId, router, toast])
 
   // Cargar las decisiones de un personaje
-  const loadDecisions = async (charId: string) => {
+  const loadDecisions = useCallback(async (charId: string) => {
     if (!charId) {
       console.warn('Se intentó cargar decisiones sin un ID de personaje válido');
       setDecisions([]);
@@ -122,7 +130,7 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
       })
       setDecisions([]);
     }
-  }
+  }, [toast])
 
   // Cambiar el personaje seleccionado
   const handleCharacterChange = async (charId: string) => {
@@ -212,8 +220,11 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
       // 5. Si el personaje borrado era el actualmente seleccionado, cambiar la selección
       if (character?.id === characterToDelete.id) {
         if (updatedCharacters.length > 0) {
-          setCharacter(updatedCharacters[0]);
-          await loadDecisions(updatedCharacters[0].id);
+          const newCharacter = updatedCharacters[0];
+          if (newCharacter) {
+            setCharacter(newCharacter);
+            await loadDecisions(newCharacter.id);
+          }
         } else {
           setCharacter(null);
           setDecisions([]);
@@ -236,6 +247,13 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
       setDeletingCharacterId(null);
     }
   };
+
+  // Effect para cargar decisiones cuando cambia el personaje o cuando se monta el componente
+  useEffect(() => {
+    if (character?.id) {
+      loadDecisions(character.id)
+    }
+  }, [character?.id, loadDecisions])
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Cargando...</div>

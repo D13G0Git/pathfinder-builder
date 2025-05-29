@@ -3,18 +3,27 @@ import Replicate from 'replicate';
 
 export async function POST(request: Request) {
   try {
+    // Validar que la API key de Replicate esté configurada
+    const replicateToken = process.env.REPLICATE_API_TOKEN;
+    if (!replicateToken) {
+      return NextResponse.json(
+        { error: 'Servicio de generación de imágenes no configurado' },
+        { status: 503 }
+      );
+    }
+
     const { prompt } = await request.json();
     
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
-        { error: 'Se requiere un prompt' },
+        { error: 'Se requiere un prompt válido' },
         { status: 400 }
       );
     }
 
     // Inicializar Replicate con el token de API del servidor
     const replicate = new Replicate({
-      auth: process.env.REPLICATE_API_TOKEN || '',
+      auth: replicateToken,
     });
 
     // Usar la sintaxis correcta del ejemplo de Replicate

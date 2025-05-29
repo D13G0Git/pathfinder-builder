@@ -2,23 +2,26 @@
 
 import { useState, useEffect } from "react"
 
+// Array con todas las imágenes disponibles (fuera del componente para evitar recreaciones)
+const backgroundImages = [
+  "/backimg_1.png",
+  "/backimg_2.png", 
+  "/backimg_3.png",
+  "/backimg_4.png",
+  "/backimg_5.png"
+]
+
 export function ParallaxBackground() {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [backgroundImage, setBackgroundImage] = useState("")
 
-  // Array con todas las imágenes disponibles
-  const backgroundImages = [
-    "/backimg_1.png",
-    "/backimg_2.png", 
-    "/backimg_3.png",
-    "/backimg_4.png",
-    "/backimg_5.png"
-  ]
-
   useEffect(() => {
     // Seleccionar una imagen aleatoria al montar el componente
     const randomIndex = Math.floor(Math.random() * backgroundImages.length)
-    setBackgroundImage(backgroundImages[randomIndex])
+    const selectedImage = backgroundImages[randomIndex]
+    if (selectedImage) {
+      setBackgroundImage(selectedImage)
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       // Calculate mouse position as a percentage of the viewport

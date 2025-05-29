@@ -193,13 +193,19 @@ const generatePathfinderCharacter = (
   decisions.forEach(decision => {
     if (decision.scenario_id === "forest") {
       // Elección del bosque - mejora la percepción
-      defaultCharacter.build.proficiencies.perception += 1
+      if (defaultCharacter.build.proficiencies.perception !== undefined) {
+        defaultCharacter.build.proficiencies.perception += 1
+      }
     } else if (decision.scenario_id === "village") {
       // Elección de la aldea - mejora la diplomacia
-      defaultCharacter.build.proficiencies.diplomacy += 1
+      if (defaultCharacter.build.proficiencies.diplomacy !== undefined) {
+        defaultCharacter.build.proficiencies.diplomacy += 1
+      }
     } else if (decision.scenario_id === "road") {
       // Elección del camino - mejora la supervivencia
-      defaultCharacter.build.proficiencies.survival += 1
+      if (defaultCharacter.build.proficiencies.survival !== undefined) {
+        defaultCharacter.build.proficiencies.survival += 1
+      }
     }
   })
   

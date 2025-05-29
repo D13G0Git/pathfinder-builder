@@ -3,10 +3,11 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Heart, Star, Coins } from "lucide-react"
+import { Heart, Star, Coins, Trophy, Sword, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
 interface GameInterfaceProps {
@@ -32,6 +33,8 @@ interface GameInterfaceProps {
   onChoose: (choice: "topLeft" | "bottomLeft" | "topRight" | "bottomRight") => void
   progress?: number
   result?: string
+  showContinueButton?: boolean
+  onContinue?: () => void
 }
 
 // Estilos CSS personalizados para efectos 3D exagerados
@@ -41,23 +44,23 @@ const styles = `
   }
   
   .rotate-3d-tl {
-    transform: rotateX(10deg) rotateY(10deg) scale(1.05);
-    box-shadow: -10px -10px 30px rgba(0, 0, 0, 0.3);
+    transform: rotateX(5deg) rotateY(5deg) scale(1.02);
+    box-shadow: -5px -5px 20px rgba(0, 0, 0, 0.2);
   }
   
   .rotate-3d-bl {
-    transform: rotateX(-10deg) rotateY(10deg) scale(1.05);
-    box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.3);
+    transform: rotateX(-5deg) rotateY(5deg) scale(1.02);
+    box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.2);
   }
   
   .rotate-3d-tr {
-    transform: rotateX(10deg) rotateY(-10deg) scale(1.05);
-    box-shadow: 10px -10px 30px rgba(0, 0, 0, 0.3);
+    transform: rotateX(5deg) rotateY(-5deg) scale(1.02);
+    box-shadow: 5px -5px 20px rgba(0, 0, 0, 0.2);
   }
   
   .rotate-3d-br {
-    transform: rotateX(-10deg) rotateY(-10deg) scale(1.05);
-    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3);
+    transform: rotateX(-5deg) rotateY(-5deg) scale(1.02);
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
   }
   
   .perspective-container {
@@ -66,7 +69,7 @@ const styles = `
   }
 `
 
-export function GameInterface({ character, scenario, onChoose, progress = 33, result }: GameInterfaceProps) {
+export function GameInterface({ character, scenario, onChoose, progress = 33, result, showContinueButton = false, onContinue }: GameInterfaceProps) {
   const [hoverArea, setHoverArea] = useState<"none" | "topLeft" | "bottomLeft" | "topRight" | "bottomRight">("none")
   const [currentOptionText, setCurrentOptionText] = useState("")
   const [typewriterText, setTypewriterText] = useState("")
@@ -86,15 +89,14 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
           index++
           
           if (index <= currentOptionText.length) {
-            setTimeout(typeText, 30) // Velocidad más lenta y estable
+            setTimeout(typeText, 25) // Velocidad más rápida
           } else {
             setIsTyping(false)
           }
         }
       }
       
-      // Pequeño delay inicial para suavizar el inicio
-      const timer = setTimeout(typeText, 100)
+      const timer = setTimeout(typeText, 50)
       
       return () => {
         clearTimeout(timer)
@@ -107,7 +109,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
   }, [currentOptionText])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (cardRef.current) {
+    if (cardRef.current && !result) {
       const rect = cardRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
@@ -151,227 +153,282 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
   }
 
   const handleMouseLeave = () => {
-    setHoverArea("none")
-    setCurrentOptionText("")
+    if (!result) {
+      setHoverArea("none")
+      setCurrentOptionText("")
+    }
   }
 
   const handleClick = () => {
-    if (hoverArea !== "none") {
+    if (hoverArea !== "none" && !result) {
       onChoose(hoverArea)
     }
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Inyectar estilos CSS personalizados */}
       <style jsx>{styles}</style>
       
-      {/* Título del Escenario */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          {scenario.title || "Aventura"}
-        </h1>
-      </div>
-
-      {/* Descripción del Escenario */}
-      <Card className="border-gray-200 dark:border-gray-700">
-        <CardContent className="p-6">
-          <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-            {scenario.question}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Progress bar */}
-      <div className="mb-6">
-        <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progreso de la Aventura</span>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{progress}%</span>
-        </div>
-        <Progress value={progress} className="h-2" />
-      </div>
-
-      {/* Character stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <Star className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">Nivel</span>
+      {/* Header con información del personaje y progreso */}
+      <div className="flex flex-col lg:flex-row gap-6 mb-6">
+        {/* Información del personaje compacta */}
+        <Card className="lg:w-80 border-gray-200 dark:border-gray-700">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-4 mb-4">
+              {character.avatar ? (
+                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                  <Image
+                    src={character.avatar}
+                    alt={character.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <span className="text-2xl">⚔️</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
+                  {character.name}
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                  {character.title}
+                </p>
+              </div>
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{character.level}</span>
+            
+            {/* Stats compactos */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center">
+                <Star className="h-4 w-4 mr-2 text-amber-500" />
+                <span className="text-gray-600 dark:text-gray-400">Nv.</span>
+                <span className="ml-1 font-semibold">{character.level}</span>
+              </div>
+              <div className="flex items-center">
+                <Heart className="h-4 w-4 mr-2 text-red-500" />
+                <span className="text-gray-600 dark:text-gray-400">HP</span>
+                <span className="ml-1 font-semibold">{character.health}</span>
+              </div>
+              <div className="flex items-center">
+                <Coins className="h-4 w-4 mr-2 text-yellow-500" />
+                <span className="text-gray-600 dark:text-gray-400">Oro</span>
+                <span className="ml-1 font-semibold">{character.gold}</span>
+              </div>
+              <div className="flex items-center">
+                <Sword className="h-4 w-4 mr-2 text-blue-500" />
+                <span className="text-gray-600 dark:text-gray-400">Fue.</span>
+                <span className="ml-1 font-semibold">{character.strength}</span>
+              </div>
+            </div>
+            
+            {/* Experiencia con barra */}
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-600 dark:text-gray-400">XP</span>
+                <span className="text-xs font-medium">{character.experience}</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${Math.min((character.experience % 100), 100)}%` }}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <Heart className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">Salud</span>
+        {/* Progreso de aventura y título */}
+        <Card className="flex-1 border-gray-200 dark:border-gray-700">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {scenario.title || "Aventura"}
+              </h1>
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Trophy className="h-3 w-3" />
+                {progress}%
+              </Badge>
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{character.health}</span>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <Coins className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">Oro</span>
-            </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{character.gold}</span>
+            <Progress value={progress} className="h-3 mb-4" />
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {scenario.question}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Imagen del escenario con overlays interactivos */}
-      <Card className="overflow-visible border-gray-200 dark:border-gray-700">
+      {/* Imagen interactiva principal */}
+      <Card className="mb-6 overflow-hidden border-gray-200 dark:border-gray-700">
         <div
           ref={cardRef}
-          className="relative cursor-pointer perspective-container"
+          className={cn(
+            "relative perspective-container",
+            result ? "cursor-default" : "cursor-pointer"
+          )}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
         >
-          {/* Imagen del escenario con efectos 3D */}
-          <div className="relative w-full h-96 bg-gray-100 dark:bg-gray-800">
+          <div className="relative w-full h-[500px] bg-gray-100 dark:bg-gray-800">
             <Image
               src={scenario.image}
               alt="Escenario"
               fill
               className={cn(
-                "object-cover transition-all duration-500 transform-3d",
-                hoverArea === "topLeft" && "rotate-3d-tl",
-                hoverArea === "bottomLeft" && "rotate-3d-bl",
-                hoverArea === "topRight" && "rotate-3d-tr",
-                hoverArea === "bottomRight" && "rotate-3d-br"
+                "object-cover transition-all duration-300 transform-3d",
+                !result && hoverArea === "topLeft" && "rotate-3d-tl",
+                !result && hoverArea === "bottomLeft" && "rotate-3d-bl",
+                !result && hoverArea === "topRight" && "rotate-3d-tr",
+                !result && hoverArea === "bottomRight" && "rotate-3d-br",
+                result && "opacity-75"
               )}
               priority
             />
 
-            {/* Overlay sutil para indicar áreas interactivas */}
-            <div
-              className={cn(
-                "absolute top-0 left-0 w-1/2 h-1/2 transition-all duration-500",
-                hoverArea === "topLeft" ? "bg-white/10 backdrop-blur-[2px]" : "bg-transparent"
-              )}
-            />
-            <div
-              className={cn(
-                "absolute bottom-0 left-0 w-1/2 h-1/2 transition-all duration-500",
-                hoverArea === "bottomLeft" ? "bg-white/10 backdrop-blur-[2px]" : "bg-transparent"
-              )}
-            />
-            <div
-              className={cn(
-                "absolute top-0 right-0 w-1/2 h-1/2 transition-all duration-500",
-                hoverArea === "topRight" ? "bg-white/10 backdrop-blur-[2px]" : "bg-transparent"
-              )}
-            />
-            <div
-              className={cn(
-                "absolute bottom-0 right-0 w-1/2 h-1/2 transition-all duration-500",
-                hoverArea === "bottomRight" ? "bg-white/10 backdrop-blur-[2px]" : "bg-transparent"
-              )}
-            />
+            {/* Overlay de resultado completado */}
+            {result && (
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                <div className="bg-green-600/90 text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                  ✅ Decisión tomada
+                </div>
+              </div>
+            )}
+
+            {/* Overlays sutiles para indicar áreas interactivas - solo si no hay resultado */}
+            {!result && (
+              <>
+                <div
+                  className={cn(
+                    "absolute top-0 left-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
+                    hoverArea === "topLeft" ? "bg-blue-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                  )}
+                >
+                  {hoverArea === "topLeft" && (
+                    <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Opción 1
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "absolute bottom-0 left-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
+                    hoverArea === "bottomLeft" ? "bg-green-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                  )}
+                >
+                  {hoverArea === "bottomLeft" && (
+                    <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Opción 2
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "absolute top-0 right-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
+                    hoverArea === "topRight" ? "bg-purple-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                  )}
+                >
+                  {hoverArea === "topRight" && (
+                    <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Opción 3
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "absolute bottom-0 right-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
+                    hoverArea === "bottomRight" ? "bg-orange-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                  )}
+                >
+                  {hoverArea === "bottomRight" && (
+                    <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Opción 4
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </Card>
 
-      {/* Sección de mensaje de opción con efecto typewriter */}
-      <Card className="border-gray-200 dark:border-gray-700 min-h-[100px]">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Opción Seleccionada
-            </h3>
-            {isTyping && (
-              <div className="animate-pulse text-gray-500 dark:text-gray-400">
-                Escribiendo...
-              </div>
-            )}
-          </div>
-          <div className="min-h-[60px] flex items-center">
-            {currentOptionText ? (
-              <p className="text-lg text-gray-700 dark:text-gray-300">
-                {typewriterText}
-                {isTyping && <span className="animate-pulse">|</span>}
-              </p>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic">
-                Pasa el mouse sobre diferentes áreas de la imagen para ver las opciones disponibles
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sección de consecuencia */}
-      <Card className="border-gray-200 dark:border-gray-700 min-h-[120px]">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Resultado de tu Decisión
-          </h3>
-          <div className="min-h-[60px] flex items-center">
-            {result ? (
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border-l-4 border-gray-400 dark:border-gray-500">
-                <p className="text-lg text-gray-700 dark:text-gray-300">
-                  {result}
-                </p>
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic">
-                Haz clic en una opción para ver las consecuencias de tu decisión
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Imagen del personaje */}
-      <Card className="border-gray-200 dark:border-gray-700">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-6">
-            {character.avatar ? (
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg">
-                <Image
-                  src={character.avatar}
-                  alt={character.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                <span className="text-4xl">⚔️</span>
-              </div>
-            )}
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {character.name} {character.title}
-              </h2>
-              <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Nivel:</span>
-                  <span className="ml-2 font-medium text-gray-700 dark:text-gray-300">{character.level}</span>
+      {/* Área de opciones y resultados */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Opción actual */}
+        <Card className="border-gray-200 dark:border-gray-700">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {result ? "Opción Seleccionada" : "Opción"}
+              </h3>
+              {isTyping && (
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
+                  Escribiendo...
                 </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Experiencia:</span>
-                  <span className="ml-2 font-medium text-gray-700 dark:text-gray-300">{character.experience}</span>
+              )}
+              {result && (
+                <div className="flex items-center text-sm text-green-600 dark:text-green-400">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  Elegida
                 </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Fuerza:</span>
-                  <span className="ml-2 font-medium text-gray-700 dark:text-gray-300">{character.strength}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Oro:</span>
-                  <span className="ml-2 font-medium text-gray-700 dark:text-gray-300">{character.gold}</span>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="min-h-[80px] flex items-center">
+              {currentOptionText ? (
+                <div className={cn(
+                  "w-full",
+                  result && "bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800"
+                )}>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {typewriterText}
+                    {isTyping && <span className="animate-pulse text-blue-500">|</span>}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 italic text-sm">
+                  {result ? "💭 Revisa el resultado de tu decisión" : "🖱️ Pasa el cursor sobre la imagen para ver las opciones disponibles"}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Resultado */}
+        <Card className="border-gray-200 dark:border-gray-700">
+          <CardContent className="p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              Resultado
+            </h3>
+            <div className="min-h-[80px] flex items-center">
+              {result ? (
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-green-500 w-full">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
+                    {result}
+                  </p>
+                  {showContinueButton && onContinue && (
+                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={onContinue}
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                      >
+                        <span>Continuar Aventura</span>
+                        <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 italic text-sm">
+                  🎯 Haz clic en una opción para ver las consecuencias
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 } 

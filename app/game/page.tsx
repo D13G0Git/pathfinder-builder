@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import { Suspense } from "react"
 import { getCharacterBuild } from "@/lib/character-builds"
+import { Sidebar } from "@/components/sidebar"
 
 // Importar componentes del diseño de prueba pero actualizados
 import { GameInterface } from "@/components/game-interface"
@@ -59,9 +60,14 @@ interface PlayerProgress {
 
 export default function GamePage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando aventura...</div>}>
-      <GameContent />
-    </Suspense>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 md:ml-64">
+        <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando aventura...</div>}>
+          <GameContent />
+        </Suspense>
+      </main>
+    </div>
   )
 }
 
@@ -76,41 +82,65 @@ function GameContent() {
   const [currentScenario, setCurrentScenario] = useState<GameScenario | null>(null)
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticating, setIsAuthenticating] = useState(true)
   const [result, setResult] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [showContinueButton, setShowContinueButton] = useState(false)
+  const [pendingNextScenario, setPendingNextScenario] = useState<number | null>(null)
+  const [pendingUpdatedStats, setPendingUpdatedStats] = useState<any>(null)
+
+  // Cargar información del usuario autenticado
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser()
+        
+        if (error) throw error
+        
+        if (data?.user) {
+          setUser(data.user)
+        } else {
+          // Si no hay usuario autenticado, redirigir al login
+          toast.error("Error de autenticación", {
+            description: "Debes iniciar sesión para jugar",
+          })
+          router.push("/login")
+        }
+      } catch (error: any) {
+        console.error("Error al cargar el usuario:", error)
+        toast.error("Error de autenticación", {
+          description: "Debes iniciar sesión para jugar",
+        })
+        router.push("/login")
+      } finally {
+        setIsAuthenticating(false)
+      }
+    }
+
+    loadUserData()
+  }, [router])
 
   useEffect(() => {
+    if (isAuthenticating || !user) {
+      return // Esperar a que se complete la autenticación
+    }
+
     const initializeGame = async () => {
       try {
-        // Verificar autenticación
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        
-        if (userError) throw userError
-        
-        if (!userData?.user) {
-          router.push("/login")
-          return
-        }
-
-        setUser(userData.user)
-
-        // Si tenemos adventureId, cargar esa aventura específica
-        if (adventureId) {
-          await loadExistingAdventure(adventureId, userData.user.id)
-        } 
-        // Si tenemos characterId, crear nueva aventura
-        else if (characterId) {
-          await createNewAdventure(characterId, userData.user.id)
+        if (adventureId && characterId) {
+          await loadExistingAdventure(adventureId, user.id)
+        } else if (characterId) {
+          await createNewAdventure(characterId, user.id)
         } else {
-          // Redirigir si no hay parámetros válidos
+          toast.error("Error", {
+            description: "No se especificó un personaje para el juego",
+          })
           router.push("/characters")
-          return
         }
-
       } catch (error: any) {
-        console.error("Error al inicializar el juego:", error)
+        console.error("Error inicializando juego:", error)
         toast.error("Error", {
-          description: "No se pudo cargar la aventura"
+          description: "No se pudo cargar la aventura. Intenta de nuevo."
         })
         router.push("/characters")
       } finally {
@@ -119,7 +149,7 @@ function GameContent() {
     }
 
     initializeGame()
-  }, [characterId, adventureId, router])
+  }, [characterId, adventureId, router, user, isAuthenticating])
 
   const loadExistingAdventure = async (advId: string, userId: string) => {
     // Cargar aventura existente con progreso
@@ -327,16 +357,10 @@ function GameContent() {
       .eq('scenario_number', scenarioNumber)
       .single()
 
-    const { data: charData, error: charError } = await supabase
-      .from('characters')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
-
-    if (error) {
-      console.error("Error cargando escenario:", error)
-      // Si no hay escenario, completar aventura
-      await completeAdventure(advId)
+    if (error || !scenarioData) {
+      console.log("No hay más escenarios disponibles. Completando aventura...")
+      // Si no hay más escenarios, completar aventura y exportar personaje
+      await completeAdventureAndExport(advId)
       return
     }
 
@@ -524,18 +548,30 @@ function GameContent() {
       console.warn("No se pudo guardar la decisión:", error)
     }
 
-    // Avanzar al siguiente escenario después de un delay
-    setTimeout(async () => {
-      const nextScenarioNumber = currentScenario.scenario_number + 1
-      
-      // Actualizar progreso del jugador en la base de datos
-      await updatePlayerProgress(adventure.id, nextScenarioNumber, updatedStats)
-      
-      // Cargar siguiente escenario
-      await loadScenario(adventure.id, nextScenarioNumber, adventure.character_id)
-      
-      setResult(null)
-    }, 3000)
+    // Preparar datos para el siguiente escenario
+    const nextScenarioNumber = currentScenario.scenario_number + 1
+    setPendingNextScenario(nextScenarioNumber)
+    setPendingUpdatedStats(updatedStats)
+    
+    // Mostrar botón de continuar
+    setShowContinueButton(true)
+  }
+
+  const handleContinue = async () => {
+    if (!adventure || !pendingNextScenario || !pendingUpdatedStats) return
+
+    setShowContinueButton(false)
+    setResult(null)
+
+    // Actualizar progreso del jugador en la base de datos
+    await updatePlayerProgress(adventure.id, pendingNextScenario, pendingUpdatedStats)
+    
+    // Cargar siguiente escenario
+    await loadScenario(adventure.id, pendingNextScenario, adventure.character_id)
+    
+    // Limpiar estados pendientes
+    setPendingNextScenario(null)
+    setPendingUpdatedStats(null)
   }
 
   const saveDecision = async (scenarioId: string, choiceIndex: number, result: string) => {
@@ -591,43 +627,111 @@ function GameContent() {
     }
   }
 
-  const completeAdventure = async (advId: string) => {
-    if (!character || !playerProgress) return
+  const generateCharacterJSON = () => {
+    if (!character || !playerProgress) return null
 
-    // Obtener la build del personaje según su clase y raza
-    const characterBuild = getCharacterBuild(character.class, character.race)
-
-    // Generar datos de resultado para Foundry VTT
-    const foundryData = {
+    const characterData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
       character: {
-        // TODO: Implementar
+        id: character.id,
+        name: character.name,
+        class: character.class,
+        race: character.race,
+        level: character.level,
+        gender: character.gender,
+        avatar: character.avatar
+      },
+      stats: {
+        health: playerProgress.character_stats.health,
+        gold: playerProgress.character_stats.gold,
+        experience: playerProgress.character_stats.experience,
+        strength: playerProgress.character_stats.strength
+      },
+      adventure: {
+        id: adventure?.id,
+        name: adventure?.name,
+        description: adventure?.description,
+        completed: true,
+        completedAt: new Date().toISOString(),
+        finalStage: playerProgress.current_scenario_number
       }
     }
 
-    // Actualizar aventura como completada
-    const { error } = await supabase
-      .from('adventures')
-      .update({
-        status: 'completed',
-        current_stage: adventure?.total_stages || 5,
-        completed_at: new Date().toISOString(),
-        result_data: foundryData
-      })
-      .eq('id', advId)
+    return characterData
+  }
 
-    if (error) {
-      console.error("Error completando aventura:", error)
-    } else {
+  const downloadCharacterJSON = () => {
+    const characterData = generateCharacterJSON()
+    if (!characterData) return
+
+    const jsonString = JSON.stringify(characterData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${character?.name}_aventura_completada.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const completeAdventureAndExport = async (advId: string) => {
+    if (!character || !playerProgress || !adventure) return
+
+    try {
+      // Actualizar aventura como completada
+      const { error } = await supabase
+        .from('adventures')
+        .update({
+          status: 'completed',
+          current_stage: adventure.total_stages || 5,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', advId)
+
+      if (error) {
+        console.error("Error completando aventura:", error)
+      }
+
+      // Mostrar interfaz de exportación
       toast.success("¡Aventura completada!", {
-        description: "Tu aventura ha sido completada exitosamente"
+        description: "Tu aventura ha sido completada exitosamente. Descarga tu personaje.",
       })
-      router.push("/adventures")
+
+      // Descargar automáticamente el JSON
+      downloadCharacterJSON()
+
+      // Redirigir después de un pequeño delay
+      setTimeout(() => {
+        router.push("/adventures")
+      }, 3000)
+
+    } catch (error) {
+      console.error("Error al completar aventura:", error)
+      toast.error("Error", {
+        description: "Hubo un problema al completar la aventura"
+      })
     }
+  }
+
+  const completeAdventure = async (advId: string) => {
+    await completeAdventureAndExport(advId)
   }
 
   const calculateProgress = () => {
     if (!adventure || !playerProgress) return 0
     return Math.round((playerProgress.current_scenario_number / adventure.total_stages) * 100)
+  }
+
+  if (isAuthenticating) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg text-muted-foreground">Verificando autenticación...</div>
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -649,13 +753,13 @@ function GameContent() {
   // Preparar datos para el componente GameInterface
   const gameCharacter = {
     name: character.name,
-    title: `el ${character.race} ${character.class}`,
+    title: `${character.race} ${character.class}`,
     level: character.level,
     health: playerProgress.character_stats.health,
     gold: playerProgress.character_stats.gold,
     experience: playerProgress.character_stats.experience,
     strength: playerProgress.character_stats.strength,
-    avatar: character.avatar
+    avatar: character.avatar || undefined
   }
 
   const scenario = {
@@ -665,23 +769,19 @@ function GameContent() {
     bottomLeftOption: currentScenario.choice_2,
     topRightOption: currentScenario.choice_3 || "Opción no disponible",
     bottomRightOption: currentScenario.choice_4 || "Opción no disponible",
-    image: currentScenario.image_url || character.avatar || "/placeholder.svg?height=400&width=400&text=Character"
+    image: currentScenario.image_url || character.avatar || "/placeholder.svg?height=500&width=800&text=Escenario"
   }
 
   return (
-    <main className="pb-16">
-      {result && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg max-w-md text-center">
-          <p className="font-medium">{result}</p>
-        </div>
-      )}
-      
+    <main className="pb-4">
       <GameInterface
         character={gameCharacter}
         scenario={scenario}
         onChoose={handleChoice}
         progress={calculateProgress()}
-        result={result}
+        result={result || undefined}
+        showContinueButton={showContinueButton}
+        onContinue={handleContinue}
       />
     </main>
   )

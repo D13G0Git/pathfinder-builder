@@ -202,7 +202,10 @@ export function CharacterCreationForm() {
       };
       
       if (raceTranslations[characterData.race]) {
-        raceInEnglish = raceTranslations[characterData.race];
+        const translation = raceTranslations[characterData.race];
+        if (translation) {
+          raceInEnglish = translation;
+        }
       }
 
       // Traducir clase al inglés si es necesario
@@ -223,7 +226,10 @@ export function CharacterCreationForm() {
       };
       
       if (classTranslations[characterData.class]) {
-        classInEnglish = classTranslations[characterData.class];
+        const translation = classTranslations[characterData.class];
+        if (translation) {
+          classInEnglish = translation;
+        }
       }
 
       // Generar el prompt para la API con más detalles para mejorar la calidad

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Scroll, Clock, Trophy, Skull, Swords, Loader2, Trash2, Download, Play } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { Sidebar } from "@/components/sidebar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -369,31 +370,39 @@ export default function AdventuresPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="m-4">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
-          <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
-        </div>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-muted-foreground">Cargando aventuras...</div>
-        </div>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 md:ml-64">
+          <div className="p-6 space-y-6">
+            <div className="m-4">
+              <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
+              <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
+            </div>
+            <div className="flex justify-center items-center h-64">
+              <div className="text-lg text-muted-foreground">Cargando aventuras...</div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="m-4">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
-        <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
-        {adventures.length > 0 && (
-          <p className="text-sm text-muted-foreground mt-2">
-            Total: {adventures.length} aventura{adventures.length !== 1 ? 's' : ''} • 
-            En progreso: {inProgressAdventures.length} • 
-            Completadas: {completedAdventures.length}
-          </p>
-        )}
-      </div>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 md:ml-64">
+        <div className="p-6 space-y-6">
+          <div className="m-4">
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
+            <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
+            {adventures.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Total: {adventures.length} aventura{adventures.length !== 1 ? 's' : ''} • 
+                En progreso: {inProgressAdventures.length} • 
+                Completadas: {completedAdventures.length}
+              </p>
+            )}
+          </div>
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="m-4">
@@ -463,6 +472,8 @@ export default function AdventuresPage() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
-  )
-}
+        </div>
+        </main>
+      </div>
+    )
+  }
