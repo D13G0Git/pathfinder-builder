@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // Validar variables de entorno requeridas
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -10,12 +11,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// Crear un cliente de Supabase para usar en todo el proyecto
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Cliente de Supabase para componentes del lado del cliente que maneja cookies automáticamente
+export const supabase = createClientComponentClient()
+
+// Cliente básico para casos donde se necesite el cliente estándar
+export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 })
 

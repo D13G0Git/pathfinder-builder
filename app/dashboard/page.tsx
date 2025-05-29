@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useAuthGuard } from "@/hooks/useAuthGuard"
+import { AuthLoading } from "@/components/auth-loading"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-import { Gamepad2, Sword, Users, Star, TrendingUp } from "lucide-react"
+import { Gamepad2, Sword, Users, Star, TrendingUp, Loader2 } from "lucide-react"
 
 interface Character {
   id: string
@@ -27,77 +29,95 @@ interface Adventure {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
+  const { user, isLoading: authLoading } = useAuthGuard()
   const [characters, setCharacters] = useState<Character[]>([])
   const [adventures, setAdventures] = useState<Adventure[]>([])
-  const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        // Verificar autenticación
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
-        if (userError || !user) {
-          router.push("/login")
-          return
-        }
+    // Si el usuario no está autenticado y no está cargando, redirigir
+    if (!authLoading && !user) {
+      console.log("🚪 [Dashboard] Usuario no autenticado, redirigiendo al login")
+      router.push("/login")
+      return
+    }
 
-        setUser(user)
+    // Si hay usuario, cargar los datos
+    if (user && !authLoading) {
+      loadDashboardData()
+    }
+  }, [user, authLoading, router])
 
-        // Cargar personajes del usuario
-        const { data: charactersData, error: charactersError } = await supabase
-          .from('characters')
-          .select('id, name, class, race, level, avatar')
-          .eq('user_id', user.id)
-          .limit(3)
-
-        if (charactersError) {
-          console.error("Error cargando personajes:", charactersError)
-          toast.error("Error cargando personajes")
-        } else {
-          setCharacters(charactersData || [])
-        }
-
-        // Cargar aventuras del usuario
-        const { data: adventuresData, error: adventuresError } = await supabase
-          .from('adventures')
-          .select('id, name, status, current_stage, total_stages')
-          .eq('user_id', user.id)
-          .limit(3)
-
-        if (adventuresError) {
-          console.error("Error cargando aventuras:", adventuresError)
-          toast.error("Error cargando aventuras")
-        } else {
-          setAdventures(adventuresData || [])
-        }
-
-      } catch (error) {
-        console.error("Error en dashboard:", error)
-        toast.error("Error cargando el dashboard")
-      } finally {
-        setLoading(false)
+  // Hook adicional para verificar autenticación de forma más agresiva
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!authLoading && !user) {
+        console.log("🚪 [Dashboard] Verificación adicional: usuario no autenticado")
+        router.replace("/login")
       }
     }
 
-    loadDashboardData()
-  }, [router])
+    const timeoutId = setTimeout(checkAuth, 100)
+    return () => clearTimeout(timeoutId)
+  }, [authLoading, user, router])
 
-  if (loading) {
-    return (
-      <main className="container mx-auto p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-muted rounded"></div>
-            ))}
-          </div>
-        </div>
-      </main>
-    )
+  const loadDashboardData = async () => {
+    if (!user) return
+
+    try {
+      setDataLoading(true)
+
+      // Cargar personajes del usuario
+      const { data: charactersData, error: charactersError } = await supabase
+        .from('characters')
+        .select('id, name, class, race, level, avatar')
+        .eq('user_id', user.id)
+        .limit(3)
+        .returns<Character[]>()
+
+      if (charactersError) {
+        console.error("Error cargando personajes:", charactersError)
+        toast.error("Error cargando personajes")
+      } else {
+        setCharacters(charactersData || [])
+      }
+
+      // Cargar aventuras del usuario
+      const { data: adventuresData, error: adventuresError } = await supabase
+        .from('adventures')
+        .select('id, name, status, current_stage, total_stages')
+        .eq('user_id', user.id)
+        .limit(3)
+        .returns<Adventure[]>()
+
+      if (adventuresError) {
+        console.error("Error cargando aventuras:", adventuresError)
+        toast.error("Error cargando aventuras")
+      } else {
+        setAdventures(adventuresData || [])
+      }
+
+    } catch (error) {
+      console.error("Error en dashboard:", error)
+      toast.error("Error cargando el dashboard")
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  // Mostrar loading mientras se autentica o se cargan los datos
+  if (authLoading) {
+    return <AuthLoading message="Verificando autenticación..." />
+  }
+
+  if (dataLoading && user) {
+    return <AuthLoading message="Cargando tu dashboard..." />
+  }
+
+  // Si no hay usuario después de cargar, no mostrar nada (se redirigirá)
+  if (!user) {
+    return <AuthLoading message="Redirigiendo al login..." />
   }
 
   return (
@@ -199,9 +219,7 @@ export default function DashboardPage() {
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <span className="font-medium text-primary">
-                            {character.name.charAt(0).toUpperCase()}
-                          </span>
+                          <Sword className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
                       <div>
@@ -211,19 +229,16 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <Badge variant="secondary">Lv.{character.level}</Badge>
+                    <Badge variant="outline">Nivel {character.level}</Badge>
                   </div>
                 ))}
-                <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push("/characters")}
-                    className="w-full"
-                  >
-                    Ver Todos los Personajes
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => router.push("/characters")}
+                >
+                  Ver Todos los Personajes
+                </Button>
               </div>
             )}
           </CardContent>
@@ -237,7 +252,7 @@ export default function DashboardPage() {
               Aventuras Activas
             </CardTitle>
             <CardDescription>
-              Continúa donde lo dejaste
+              Tus historias en progreso
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -247,15 +262,12 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground mb-4">
                   No tienes aventuras activas
                 </p>
-                {characters.length > 0 ? (
-                  <Button onClick={() => router.push("/game")}>
-                    Iniciar Nueva Aventura
-                  </Button>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Crea un personaje primero
-                  </p>
-                )}
+                <Button 
+                  onClick={() => router.push("/adventures")}
+                  disabled={characters.length === 0}
+                >
+                  {characters.length === 0 ? "Necesitas un personaje primero" : "Comenzar Aventura"}
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -268,24 +280,23 @@ export default function DashboardPage() {
                     <div>
                       <p className="font-medium">{adventure.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Progreso: {adventure.current_stage}/{adventure.total_stages}
+                        Etapa {adventure.current_stage} de {adventure.total_stages}
                       </p>
                     </div>
-                    <Badge variant={adventure.status === 'completed' ? 'default' : 'secondary'}>
+                    <Badge 
+                      variant={adventure.status === 'completed' ? 'default' : 'secondary'}
+                    >
                       {adventure.status === 'completed' ? 'Completada' : 'En Progreso'}
                     </Badge>
                   </div>
                 ))}
-                <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push("/adventures")}
-                    className="w-full"
-                  >
-                    Ver Todas las Aventuras
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => router.push("/adventures")}
+                >
+                  Ver Todas las Aventuras
+                </Button>
               </div>
             )}
           </CardContent>
@@ -297,36 +308,37 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle>Acciones Rápidas</CardTitle>
           <CardDescription>
-            Accesos directos para comenzar tu aventura
+            Accesos directos a las funciones principales
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button 
-              variant="outline" 
               onClick={() => router.push("/character-create")}
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-24 flex flex-col gap-2"
             >
               <Sword className="h-6 w-6" />
               <span>Crear Personaje</span>
             </Button>
             
             <Button 
-              variant="outline" 
+              variant="outline"
               onClick={() => router.push("/characters")}
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-24 flex flex-col gap-2"
+              disabled={characters.length === 0}
             >
               <Users className="h-6 w-6" />
               <span>Mis Personajes</span>
             </Button>
             
             <Button 
-              variant="outline" 
+              variant="outline"
               onClick={() => router.push("/adventures")}
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-24 flex flex-col gap-2"
+              disabled={characters.length === 0}
             >
-              <Star className="h-6 w-6" />
-              <span>Mis Aventuras</span>
+              <Gamepad2 className="h-6 w-6" />
+              <span>Aventuras</span>
             </Button>
           </div>
         </CardContent>

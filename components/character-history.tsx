@@ -64,19 +64,19 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
           if (charactersError) throw charactersError
           
           if (charactersData && charactersData.length > 0) {
-            setCharacters(charactersData as UserCharacter[])
+            setCharacters(charactersData as unknown as UserCharacter[])
             
             // Si se proporciona un ID de personaje, cargamos ese personaje y sus decisiones
             if (characterId) {
-              const selectedCharacter = charactersData.find(c => c.id === characterId)
+              const selectedCharacter = charactersData.find(c => (c as any).id === characterId)
               if (selectedCharacter) {
-                setCharacter(selectedCharacter as UserCharacter)
-                await loadDecisions(selectedCharacter.id)
+                setCharacter(selectedCharacter as unknown as UserCharacter)
+                await loadDecisions((selectedCharacter as any).id)
               }
             } else if (charactersData.length > 0) {
               // Si no hay ID, cargamos el primer personaje
-              setCharacter(charactersData[0] as UserCharacter)
-              await loadDecisions(charactersData[0].id)
+              setCharacter(charactersData[0] as unknown as UserCharacter)
+              await loadDecisions((charactersData[0] as any).id)
             }
           }
         } else {
@@ -120,7 +120,7 @@ export function CharacterHistory({ characterId }: CharacterHistoryProps) {
       
       if (error) throw error
       
-      setDecisions(data as UserDecision[])
+      setDecisions(data as unknown as UserDecision[])
     } catch (error: any) {
       console.error('Error al cargar las decisiones:', error)
       toast({

@@ -12,6 +12,154 @@ body {
   }
 }
 
+/* Animaciones personalizadas para el login */
+@layer components {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .gradient-border {
+    position: relative;
+    background: transparent;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(45deg, #6b7280, #374151, #1f2937);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: subtract;
+    -webkit-mask-composite: xor;
+  }
+
+  /* Animaciones suaves para texto */
+  .animate-slide-in {
+    animation: slideInFromLeft 0.7s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.7s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.7s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(156, 163, 175, 0.3);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(156, 163, 175, 0.6);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Nuevas animaciones para el texto */
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Efectos de hover mejorados */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Mejoras para inputs con iconos */
+.input-group {
+  position: relative;
+}
+
+.input-group input:focus + .input-icon {
+  color: rgb(75, 85, 99); /* Gray-600 para tema acromático */
+}
+
+/* Gradientes acromáticos */
+.bg-gradient-cosmic {
+  background: linear-gradient(135deg, #6b7280 0%, #374151 100%);
+}
+
+.bg-gradient-magic {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+}
+
+/* Tema acromático mejorado */
+.acromatic-theme {
+  filter: grayscale(100%);
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

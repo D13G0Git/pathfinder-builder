@@ -29,12 +29,13 @@ interface GameInterfaceProps {
     topRightOption: string
     bottomRightOption: string
     image: string
+    result?: string
   }
   onChoose: (choice: "topLeft" | "bottomLeft" | "topRight" | "bottomRight") => void
   progress?: number
-  result?: string
   showContinueButton?: boolean
   onContinue?: () => void
+  choiceDisabled?: boolean
 }
 
 // Estilos CSS personalizados para efectos 3D exagerados
@@ -69,14 +70,15 @@ const styles = `
   }
 `
 
-export function GameInterface({ character, scenario, onChoose, progress = 33, result, showContinueButton = false, onContinue }: GameInterfaceProps) {
+export function GameInterface({ character, scenario, onChoose, progress = 33, showContinueButton = false, onContinue, choiceDisabled = false }: GameInterfaceProps) {
   const [hoverArea, setHoverArea] = useState<"none" | "topLeft" | "bottomLeft" | "topRight" | "bottomRight">("none")
   const [currentOptionText, setCurrentOptionText] = useState("")
   const [typewriterText, setTypewriterText] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const typingTimer = useRef<number | null>(null)
 
-  // Efecto typewriter mejorado
+  // Efecto typewriter mejorado con limpieza correcta de timeouts
   useEffect(() => {
     if (currentOptionText && currentOptionText.length > 0) {
       setIsTyping(true)
@@ -89,17 +91,21 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
           index++
           
           if (index <= currentOptionText.length) {
-            setTimeout(typeText, 25) // Velocidad más rápida
+            typingTimer.current = window.setTimeout(typeText, 25) // Velocidad más rápida
           } else {
             setIsTyping(false)
+            typingTimer.current = null
           }
         }
       }
       
-      const timer = setTimeout(typeText, 50)
+      typingTimer.current = window.setTimeout(typeText, 50)
       
       return () => {
-        clearTimeout(timer)
+        if (typingTimer.current !== null) {
+          clearTimeout(typingTimer.current)
+          typingTimer.current = null
+        }
         setIsTyping(false)
       }
     } else {
@@ -109,7 +115,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
   }, [currentOptionText])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (cardRef.current && !result) {
+    if (cardRef.current && !choiceDisabled) {
       const rect = cardRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
@@ -153,14 +159,14 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
   }
 
   const handleMouseLeave = () => {
-    if (!result) {
+    if (!choiceDisabled) {
       setHoverArea("none")
       setCurrentOptionText("")
     }
   }
 
   const handleClick = () => {
-    if (hoverArea !== "none" && !result) {
+    if (hoverArea !== "none" && !choiceDisabled) {
       onChoose(hoverArea)
     }
   }
@@ -208,7 +214,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
                 <span className="ml-1 font-semibold">{character.level}</span>
               </div>
               <div className="flex items-center">
-                <Heart className="h-4 w-4 mr-2 text-red-500" />
+                <Heart className="h-4 w-4 mr-2 text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-400">HP</span>
                 <span className="ml-1 font-semibold">{character.health}</span>
               </div>
@@ -218,7 +224,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
                 <span className="ml-1 font-semibold">{character.gold}</span>
               </div>
               <div className="flex items-center">
-                <Sword className="h-4 w-4 mr-2 text-blue-500" />
+                <Sword className="h-4 w-4 mr-2 text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-400">Fue.</span>
                 <span className="ml-1 font-semibold">{character.strength}</span>
               </div>
@@ -232,7 +238,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div 
-                  className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                  className="bg-gray-400 h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${Math.min((character.experience % 100), 100)}%` }}
                 />
               </div>
@@ -266,7 +272,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
           ref={cardRef}
           className={cn(
             "relative perspective-container",
-            result ? "cursor-default" : "cursor-pointer"
+            choiceDisabled ? "cursor-not-allowed" : "cursor-pointer"
           )}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
@@ -279,31 +285,31 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
               fill
               className={cn(
                 "object-cover transition-all duration-300 transform-3d",
-                !result && hoverArea === "topLeft" && "rotate-3d-tl",
-                !result && hoverArea === "bottomLeft" && "rotate-3d-bl",
-                !result && hoverArea === "topRight" && "rotate-3d-tr",
-                !result && hoverArea === "bottomRight" && "rotate-3d-br",
-                result && "opacity-75"
+                !choiceDisabled && hoverArea === "topLeft" && "rotate-3d-tl",
+                !choiceDisabled && hoverArea === "bottomLeft" && "rotate-3d-bl",
+                !choiceDisabled && hoverArea === "topRight" && "rotate-3d-tr",
+                !choiceDisabled && hoverArea === "bottomRight" && "rotate-3d-br",
+                choiceDisabled && "opacity-75"
               )}
               priority
             />
 
             {/* Overlay de resultado completado */}
-            {result && (
+            {choiceDisabled && (
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <div className="bg-green-600/90 text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                <div className="bg-gray-800/90 text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
                   ✅ Decisión tomada
                 </div>
               </div>
             )}
 
-            {/* Overlays sutiles para indicar áreas interactivas - solo si no hay resultado */}
-            {!result && (
+            {/* Overlays sutiles para indicar áreas interactivas - solo si no están deshabilitadas */}
+            {!choiceDisabled && (
               <>
                 <div
                   className={cn(
                     "absolute top-0 left-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
-                    hoverArea === "topLeft" ? "bg-blue-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                    hoverArea === "topLeft" ? "bg-gray-500/20 backdrop-blur-[1px]" : "bg-transparent"
                   )}
                 >
                   {hoverArea === "topLeft" && (
@@ -315,7 +321,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
                 <div
                   className={cn(
                     "absolute bottom-0 left-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
-                    hoverArea === "bottomLeft" ? "bg-green-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                    hoverArea === "bottomLeft" ? "bg-gray-500/20 backdrop-blur-[1px]" : "bg-transparent"
                   )}
                 >
                   {hoverArea === "bottomLeft" && (
@@ -327,7 +333,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
                 <div
                   className={cn(
                     "absolute top-0 right-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
-                    hoverArea === "topRight" ? "bg-purple-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                    hoverArea === "topRight" ? "bg-gray-500/20 backdrop-blur-[1px]" : "bg-transparent"
                   )}
                 >
                   {hoverArea === "topRight" && (
@@ -339,7 +345,7 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
                 <div
                   className={cn(
                     "absolute bottom-0 right-0 w-1/2 h-1/2 transition-all duration-300 flex items-center justify-center",
-                    hoverArea === "bottomRight" ? "bg-orange-500/20 backdrop-blur-[1px]" : "bg-transparent"
+                    hoverArea === "bottomRight" ? "bg-gray-500/20 backdrop-blur-[1px]" : "bg-transparent"
                   )}
                 >
                   {hoverArea === "bottomRight" && (
@@ -361,17 +367,17 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {result ? "Opción Seleccionada" : "Opción"}
+                {choiceDisabled ? "Opción Seleccionada" : "Opción"}
               </h3>
               {isTyping && (
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse mr-2"></div>
                   Escribiendo...
                 </div>
               )}
-              {result && (
-                <div className="flex items-center text-sm text-green-600 dark:text-green-400">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              {choiceDisabled && (
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                  <div className="w-2 h-2 bg-gray-600 rounded-full mr-2"></div>
                   Elegida
                 </div>
               )}
@@ -380,16 +386,16 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
               {currentOptionText ? (
                 <div className={cn(
                   "w-full",
-                  result && "bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800"
+                  choiceDisabled && "bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
                 )}>
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                     {typewriterText}
-                    {isTyping && <span className="animate-pulse text-blue-500">|</span>}
+                    {isTyping && <span className="animate-pulse text-gray-500">|</span>}
                   </p>
                 </div>
               ) : (
                 <p className="text-gray-500 dark:text-gray-400 italic text-sm">
-                  {result ? "💭 Revisa el resultado de tu decisión" : "🖱️ Pasa el cursor sobre la imagen para ver las opciones disponibles"}
+                  {choiceDisabled ? "💭 Revisa el resultado de tu decisión" : "🖱️ Pasa el cursor sobre la imagen para ver las opciones disponibles"}
                 </p>
               )}
             </div>
@@ -403,16 +409,16 @@ export function GameInterface({ character, scenario, onChoose, progress = 33, re
               Resultado
             </h3>
             <div className="min-h-[80px] flex items-center">
-              {result ? (
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-green-500 w-full">
+              {scenario.result ? (
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-gray-500 w-full">
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-                    {result}
+                    {scenario.result}
                   </p>
                   {showContinueButton && onContinue && (
                     <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
                       <button
                         onClick={onContinue}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                        className="w-full bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                       >
                         <span>Continuar Aventura</span>
                         <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />

@@ -68,7 +68,7 @@ export default function CharactersPage() {
 
         if (charactersError) throw charactersError
 
-        setCharacters(charactersData || [])
+        setCharacters((charactersData as unknown as Character[]) || [])
       } catch (error: any) {
         console.error("Error al cargar personajes:", error)
         toast.error("Error", {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
@@ -88,6 +88,7 @@ function GameContent() {
   const [showContinueButton, setShowContinueButton] = useState(false)
   const [pendingNextScenario, setPendingNextScenario] = useState<number | null>(null)
   const [pendingUpdatedStats, setPendingUpdatedStats] = useState<any>(null)
+  const [choiceDisabled, setChoiceDisabled] = useState(false)
 
   // Cargar información del usuario autenticado
   useEffect(() => {
@@ -165,8 +166,8 @@ function GameContent() {
 
     if (advError) throw advError
 
-    setAdventure(advData)
-    setCharacter(advData.character)
+    setAdventure(advData as unknown as Adventure)
+    setCharacter(advData.character as unknown as Character)
 
     // Cargar progreso del jugador
     const { data: progressData, error: progressError } = await supabase
@@ -179,8 +180,8 @@ function GameContent() {
     if (progressError && progressError.code !== 'PGRST116') throw progressError
 
     if (progressData) {
-      setPlayerProgress(progressData)
-      await loadScenario(advId, progressData.current_scenario_number, userId)
+      setPlayerProgress(progressData as unknown as PlayerProgress)
+      await loadScenario(advId, (progressData as any).current_scenario_number, userId)
     } else {
       // Crear nuevo progreso si no existe
       await createPlayerProgress(advId, userId)
@@ -198,7 +199,7 @@ function GameContent() {
 
     if (charError) throw charError
 
-    setCharacter(charData)
+    setCharacter(charData as unknown as Character)
 
     // Crear nueva aventura
     const adventureName = `Aventura de ${charData.name}`
@@ -220,13 +221,13 @@ function GameContent() {
 
     if (adventureError) throw adventureError
 
-    setAdventure(newAdventure)
+    setAdventure(newAdventure as unknown as Adventure)
 
     // Crear escenarios para esta aventura (mockeados por ahora)
-    await createGameScenarios(newAdventure.id, charData)
+    await createGameScenarios((newAdventure as any).id, charData as unknown as Character)
 
     // Crear progreso inicial del jugador
-    await createPlayerProgress(newAdventure.id, userId)
+    await createPlayerProgress((newAdventure as any).id, userId)
   }
 
   const createGameScenarios = async (advId: string, character: Character) => {
@@ -401,18 +402,18 @@ function GameContent() {
       }
 
       // Aplicar placeholders a todos los textos del escenario
-      scenarioData.description = replacePlaceholders(scenarioData.description)
-      scenarioData.result_1 = replacePlaceholders(scenarioData.result_1)
-      scenarioData.result_2 = replacePlaceholders(scenarioData.result_2)
-      scenarioData.result_3 = replacePlaceholders(scenarioData.result_3)
-      scenarioData.result_4 = replacePlaceholders(scenarioData.result_4)
+      (scenarioData as any).description = replacePlaceholders((scenarioData as any).description)
+      ;(scenarioData as any).result_1 = replacePlaceholders((scenarioData as any).result_1)
+      ;(scenarioData as any).result_2 = replacePlaceholders((scenarioData as any).result_2)
+      ;(scenarioData as any).result_3 = replacePlaceholders((scenarioData as any).result_3)
+      ;(scenarioData as any).result_4 = replacePlaceholders((scenarioData as any).result_4)
     }
 
-    setCurrentScenario(scenarioData)
+    setCurrentScenario(scenarioData as unknown as GameScenario)
   }
 
   const handleChoice = async (choice: "topLeft" | "bottomLeft" | "topRight" | "bottomRight") => {
-    if (!currentScenario || !adventure || !playerProgress || !user) return
+    if (!currentScenario || !adventure || !playerProgress || !user || choiceDisabled) return
 
     const choiceIndex = {
       topLeft: 1,
@@ -429,6 +430,9 @@ function GameContent() {
       toast.error("Opción no disponible")
       return
     }
+
+    // Bloquear más elecciones hasta que se continúe
+    setChoiceDisabled(true)
 
     // Mostrar resultado
     setResult(resultText)
@@ -560,18 +564,28 @@ function GameContent() {
   const handleContinue = async () => {
     if (!adventure || !pendingNextScenario || !pendingUpdatedStats) return
 
-    setShowContinueButton(false)
-    setResult(null)
+    try {
+      setShowContinueButton(false)
+      setResult(null)
 
-    // Actualizar progreso del jugador en la base de datos
-    await updatePlayerProgress(adventure.id, pendingNextScenario, pendingUpdatedStats)
-    
-    // Cargar siguiente escenario
-    await loadScenario(adventure.id, pendingNextScenario, adventure.character_id)
-    
-    // Limpiar estados pendientes
-    setPendingNextScenario(null)
-    setPendingUpdatedStats(null)
+      // Actualizar progreso del jugador en la base de datos
+      await updatePlayerProgress(adventure.id, pendingNextScenario, pendingUpdatedStats)
+      
+      // Cargar siguiente escenario
+      await loadScenario(adventure.id, pendingNextScenario, user.id)
+      
+      // Limpiar estados pendientes
+      setPendingNextScenario(null)
+      setPendingUpdatedStats(null)
+    } catch (error) {
+      console.error("Error al continuar:", error)
+      toast.error("Error", {
+        description: "Hubo un problema al continuar la aventura"
+      })
+    } finally {
+      // Re-habilitar elecciones
+      setChoiceDisabled(false)
+    }
   }
 
   const saveDecision = async (scenarioId: string, choiceIndex: number, result: string) => {
@@ -624,6 +638,7 @@ function GameContent() {
           updated_at: new Date().toISOString()
         })
         .eq('id', advId)
+        .eq('user_id', user.id)
     }
   }
 
@@ -679,7 +694,7 @@ function GameContent() {
   }
 
   const completeAdventureAndExport = async (advId: string) => {
-    if (!character || !playerProgress || !adventure) return
+    if (!character || !playerProgress || !adventure || !user) return
 
     try {
       // Actualizar aventura como completada
@@ -691,9 +706,14 @@ function GameContent() {
           completed_at: new Date().toISOString()
         })
         .eq('id', advId)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error("Error completando aventura:", error)
+        toast.error("Error", {
+          description: "No tienes permisos para completar esta aventura"
+        })
+        return
       }
 
       // Mostrar interfaz de exportación
@@ -769,7 +789,8 @@ function GameContent() {
     bottomLeftOption: currentScenario.choice_2,
     topRightOption: currentScenario.choice_3 || "Opción no disponible",
     bottomRightOption: currentScenario.choice_4 || "Opción no disponible",
-    image: currentScenario.image_url || character.avatar || "/placeholder.svg?height=500&width=800&text=Escenario"
+    image: currentScenario.image_url || character.avatar || "/placeholder.svg?height=500&width=800&text=Escenario",
+    result: result || undefined
   }
 
   return (
@@ -779,9 +800,9 @@ function GameContent() {
         scenario={scenario}
         onChoose={handleChoice}
         progress={calculateProgress()}
-        result={result || undefined}
         showContinueButton={showContinueButton}
         onContinue={handleContinue}
+        choiceDisabled={choiceDisabled}
       />
     </main>
   )

@@ -21,6 +21,9 @@ export async function GET(request: Request) {
       if (exchangeError) {
         return NextResponse.redirect(new URL('/login?error=callback_error', request.url))
       }
+    } else {
+      // No code or error - invalid callback
+      return NextResponse.redirect(new URL('/login?error=invalid_callback', request.url))
     }
 
     // Redirigir al dashboard después de la autenticación exitosa

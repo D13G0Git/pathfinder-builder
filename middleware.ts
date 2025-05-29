@@ -9,11 +9,34 @@ export async function middleware(request: NextRequest) {
     // Crear un cliente de Supabase configurado para usar cookies
     const supabase = createMiddlewareClient({ req: request, res })
 
-    // Verificar si el usuario está autenticado
+    // Para rutas de login, permitir acceso directo sin verificar sesión
+    if (request.nextUrl.pathname === '/login') {
+      console.log('🔒 [Middleware] Acceso a /login permitido')
+      return res
+    }
+
+    // Verificar si el usuario está autenticado con mejor manejo de errores
     const {
       data: { session },
       error
     } = await supabase.auth.getSession()
+
+    // Debug básico
+    console.log('🔒 [Middleware] Ruta:', request.nextUrl.pathname)
+    console.log('🔒 [Middleware] Sesión encontrada:', !!session)
+    console.log('🔒 [Middleware] Usuario:', session?.user?.email || 'ninguno')
+
+    // Manejo mejorado de errores de sesión
+    if (error) {
+      console.log('🔒 [Middleware] Error en getSession:', error.message)
+      if (error.name === 'AuthSessionMissingError' || 
+          error.message?.includes('session_not_found') ||
+          error.message?.includes('Auth session missing')) {
+        console.log('🔒 [Middleware] No hay sesión activa, continuando como usuario no autenticado')
+      } else {
+        console.warn('🔒 [Middleware] Error de autenticación no crítico:', error.message)
+      }
+    }
 
     const user = session?.user
 
@@ -33,27 +56,39 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route)
     ) && !isProtectedRoute
 
+    console.log('🔒 [Middleware] Es ruta protegida:', isProtectedRoute)
+    console.log('🔒 [Middleware] Usuario autenticado:', !!user)
+
     // Si es una ruta protegida y el usuario no está autenticado, redirigir al login
     if (isProtectedRoute && !user) {
+      console.log('🔒 [Middleware] Redirigiendo a login: ruta protegida sin autenticación')
       const redirectUrl = new URL('/login', request.url)
       return NextResponse.redirect(redirectUrl)
     }
 
     // Si el usuario está autenticado y está en la página de login, redirigir al dashboard
     if (user && request.nextUrl.pathname === '/login') {
-      const redirectUrl = new URL('/dashboard', request.url)
-      return NextResponse.redirect(redirectUrl)
+      console.log('🔒 [Middleware] Redirigiendo a dashboard: usuario ya autenticado')
+      
+      // Verificar si hay parámetros que indiquen una redirección reciente para evitar loops
+      const isRecentLogin = request.nextUrl.searchParams.get('recent') === 'true'
+      if (!isRecentLogin) {
+        const redirectUrl = new URL('/dashboard', request.url)
+        return NextResponse.redirect(redirectUrl)
+      }
     }
 
     // Si el usuario está autenticado y está en la página principal, redirigir al dashboard
     if (user && request.nextUrl.pathname === '/') {
+      console.log('🔒 [Middleware] Redirigiendo a dashboard: usuario en página principal')
       const redirectUrl = new URL('/dashboard', request.url)
       return NextResponse.redirect(redirectUrl)
     }
 
     return res
   } catch (error) {
-    console.error('Error en middleware:', error)
+    console.error('🔒 [Middleware] Error inesperado en middleware:', error)
+    // En caso de error inesperado, permitir continuar para evitar bloquear la aplicación
     return res
   }
 }

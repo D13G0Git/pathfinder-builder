@@ -513,7 +513,7 @@ export default function SettingsPage() {
                   <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded">
                     {isPlaying ? (
                       <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-pulse"></div>
                         Reproduciendo: {musicTracks.find(t => t.id === currentTrack)?.name}
                       </span>
                     ) : (
