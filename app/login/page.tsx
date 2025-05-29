@@ -31,7 +31,6 @@ export default function LoginPage() {
                 strokeLinejoin="round"
                 className="h-8 w-8"
               >
-                <path d="M12 2L2 7v10c0 5.55 3.84 10 9 9 5.16 1 9-3.45 9-9V7l-10-5z" />
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>

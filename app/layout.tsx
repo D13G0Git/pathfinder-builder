@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
 import { SupabaseProvider } from "@/components/providers/supabase-provider"
 import { ParallaxBackground } from "@/components/parallax-background"
+import { LanguageProvider } from "@/contexts/language-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,10 +25,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SupabaseProvider>
-            <ParallaxBackground />
-            {children}
-          </SupabaseProvider>
+          <LanguageProvider>
+            <SupabaseProvider>
+              <ParallaxBackground />
+              {children}
+            </SupabaseProvider>
+          </LanguageProvider>
           <Toaster />
         </ThemeProvider>
       </body>

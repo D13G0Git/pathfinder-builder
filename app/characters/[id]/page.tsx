@@ -20,7 +20,10 @@ import {
   MapPin,
   Gamepad2,
   Trash2,
-  Loader2
+  Loader2,
+  Download,
+  Trophy,
+  Play
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
@@ -35,6 +38,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import Image from "next/image"
 
 interface Character {
@@ -55,8 +66,12 @@ interface Adventure {
   name: string
   description: string
   character_id: string
-  status: string
+  status: 'in_progress' | 'completed'
   created_at: string
+  completed_at: string | null
+  result_data: any
+  current_stage: number
+  total_stages: number
 }
 
 export default function CharacterDetailsPage() {
@@ -103,10 +118,20 @@ export default function CharacterDetailsPage() {
 
         setCharacter(characterData)
 
-        // Por ahora simulamos las aventuras ya que no hay tabla de aventuras
-        // En el futuro esto vendría de una tabla real
-        const mockAdventures: Adventure[] = []
-        setAdventures(mockAdventures)
+        // Cargar aventuras reales del personaje
+        const { data: adventuresData, error: adventuresError } = await supabase
+          .from('adventures')
+          .select('*')
+          .eq('character_id', characterId)
+          .eq('user_id', userData.user.id)
+          .order('updated_at', { ascending: false })
+
+        if (adventuresError) {
+          console.warn("Error al cargar aventuras:", adventuresError)
+          // No es error crítico, podemos continuar sin aventuras
+        } else {
+          setAdventures(adventuresData || [])
+        }
 
       } catch (error: any) {
         console.error("Error al cargar datos del personaje:", error)
@@ -124,25 +149,57 @@ export default function CharacterDetailsPage() {
   }, [characterId, router])
 
   const handleDeleteAdventure = async (adventureId: string) => {
+    if (!user) return
+
     setIsDeletingAdventure(adventureId)
     
     try {
-      // Simular borrado de aventura
-      // En el futuro esto sería una llamada real a la BD
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      const { error: deleteError } = await supabase
+        .from('adventures')
+        .delete()
+        .eq('id', adventureId)
+        .eq('user_id', user.id) // Seguridad adicional
+
+      if (deleteError) throw deleteError
+
+      // Actualizar el estado local
       setAdventures(prev => prev.filter(a => a.id !== adventureId))
       
       toast.success("Aventura eliminada", {
         description: "La aventura ha sido eliminada exitosamente."
       })
     } catch (error: any) {
+      console.error("Error al borrar la aventura:", error)
       toast.error("Error", {
-        description: "No se pudo eliminar la aventura"
+        description: "No se pudo eliminar la aventura. " + (error.message || error)
       })
     } finally {
       setIsDeletingAdventure(null)
     }
+  }
+
+  // Función para exportar datos de Foundry
+  const handleExportFoundry = (adventure: Adventure) => {
+    if (!adventure.result_data) {
+      toast.error("No hay datos de resultado disponibles para exportar")
+      return
+    }
+
+    const dataStr = JSON.stringify(adventure.result_data, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${character?.name || 'personaje'}_${adventure.name.replace(/\s+/g, '_')}_foundry.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast.success("Archivo exportado", {
+      description: "El archivo JSON de Foundry VTT ha sido descargado"
+    })
   }
 
   const renderCharacterStats = (characterData: any) => {
@@ -482,20 +539,84 @@ export default function CharacterDetailsPage() {
                           <div>
                             <CardTitle className="text-lg">{adventure.name}</CardTitle>
                             <CardDescription>{adventure.description}</CardDescription>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-sm text-muted-foreground">
+                                Progreso: {adventure.current_stage}/{adventure.total_stages} etapas
+                              </span>
+                              {adventure.completed_at && (
+                                <span className="text-sm text-muted-foreground">
+                                  • Completada {new Date(adventure.completed_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                            {adventure.status}
+                          <Badge
+                            className={
+                              adventure.status === "completed"
+                                ? "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+                                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-500"
+                            }
+                          >
+                            {adventure.status === "completed" ? "Completada" : "En Progreso"}
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardFooter className="flex justify-between">
-                        <Button 
-                          variant="outline"
-                          onClick={() => router.push(`/adventures/${adventure.id}`)}
-                          className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                          Acceder a Aventura
-                        </Button>
+                      <CardFooter className="flex justify-between gap-2">
+                        {adventure.status === "completed" ? (
+                          <div className="flex gap-2">
+                            {adventure.result_data ? (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    variant="outline"
+                                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  >
+                                    <Trophy className="h-4 w-4 mr-2" />
+                                    Ver Resultado
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Resultado de la Aventura</DialogTitle>
+                                    <DialogDescription>
+                                      Datos del personaje para exportar a Foundry VTT
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="mt-4">
+                                    <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-xs overflow-x-auto">
+                                      {JSON.stringify(adventure.result_data, null, 2)}
+                                    </pre>
+                                    <div className="flex gap-2 mt-4">
+                                      <Button 
+                                        onClick={() => handleExportFoundry(adventure)}
+                                        className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
+                                      >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Exportar a Foundry VTT
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                disabled
+                                className="border-gray-300 dark:border-gray-600"
+                              >
+                                Sin datos de resultado
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <Button 
+                            onClick={() => router.push(`/game?adventure=${adventure.id}`)}
+                            className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Continuar Aventura
+                          </Button>
+                        )}
                         
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -507,10 +628,7 @@ export default function CharacterDetailsPage() {
                               {isDeletingAdventure === adventure.id ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <>
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Eliminar Aventura
-                                </>
+                                <Trash2 className="h-4 w-4" />
                               )}
                             </Button>
                           </AlertDialogTrigger>
@@ -519,7 +637,7 @@ export default function CharacterDetailsPage() {
                               <AlertDialogTitle>¿Eliminar aventura?</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Esta acción no se puede deshacer. Se eliminará permanentemente la aventura 
-                                <strong> {adventure.name}</strong> y todo su progreso.
+                                <strong> "{adventure.name}"</strong> y todo su progreso.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

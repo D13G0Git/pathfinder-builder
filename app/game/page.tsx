@@ -5,8 +5,9 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import { Suspense } from "react"
-import { getCharacterBuild } from "@/lib/character-builds"
+import { getCharacterBuild, hasBuildAvailable, getBuildSummary } from "@/lib/character-builds"
 import { Sidebar } from "@/components/sidebar"
+import { BuildInfoBanner } from "@/components/build-info-banner"
 
 // Importar componentes del diseño de prueba pero actualizados
 import { GameInterface } from "@/components/game-interface"
@@ -89,6 +90,7 @@ function GameContent() {
   const [pendingNextScenario, setPendingNextScenario] = useState<number | null>(null)
   const [pendingUpdatedStats, setPendingUpdatedStats] = useState<any>(null)
   const [choiceDisabled, setChoiceDisabled] = useState(false)
+  const [buildInfo, setBuildInfo] = useState<string | null>(null)
 
   // Cargar información del usuario autenticado
   useEffect(() => {
@@ -151,6 +153,14 @@ function GameContent() {
 
     initializeGame()
   }, [characterId, adventureId, router, user, isAuthenticating])
+
+  // Cargar información de build cuando se carga el personaje
+  useEffect(() => {
+    if (character) {
+      const buildSummary = getBuildSummary(character.class, character.race)
+      setBuildInfo(buildSummary)
+    }
+  }, [character])
 
   const loadExistingAdventure = async (advId: string, userId: string) => {
     // Cargar aventura existente con progreso
@@ -645,6 +655,9 @@ function GameContent() {
   const generateCharacterJSON = () => {
     if (!character || !playerProgress) return null
 
+    // Obtener build de Foundry VTT basada en clase y raza
+    const foundryBuild = getCharacterBuild(character.class, character.race)
+
     const characterData = {
       version: "1.0",
       exportDate: new Date().toISOString(),
@@ -670,6 +683,34 @@ function GameContent() {
         completed: true,
         completedAt: new Date().toISOString(),
         finalStage: playerProgress.current_scenario_number
+      },
+      // Incluir build de Foundry VTT si está disponible
+      foundryVTT: foundryBuild ? {
+        success: foundryBuild.success,
+        build: {
+          ...foundryBuild.build,
+          // Actualizar el nombre con el nombre del personaje del juego
+          name: character.name,
+          // Actualizar nivel si el personaje ganó experiencia
+          level: Math.max(character.level, Math.floor(playerProgress.character_stats.experience / 100) + 1),
+          // Actualizar oro con el oro ganado en la aventura
+          money: {
+            ...foundryBuild.build.money,
+            gp: foundryBuild.build.money.gp + playerProgress.character_stats.gold
+          },
+          // Actualizar salud si cambió durante la aventura
+          attributes: {
+            ...foundryBuild.build.attributes,
+            bonushp: Math.max(0, playerProgress.character_stats.health - 100)
+          }
+        }
+      } : null,
+      // Instrucciones para el usuario
+      instructions: {
+        foundryVTT: foundryBuild ? 
+          "Esta build puede ser importada directamente en Foundry VTT. Ve a 'Crear Personaje' -> 'Importar' y pega el contenido de 'foundryVTT' en el campo de importación." :
+          "No hay build disponible para esta combinación de clase y raza. Puedes crear el personaje manualmente en Foundry VTT usando las estadísticas proporcionadas.",
+        general: "Este archivo contiene todas las estadísticas y progreso de tu personaje después de completar la aventura."
       }
     }
 
@@ -693,17 +734,56 @@ function GameContent() {
     URL.revokeObjectURL(url)
   }
 
+  const showBuildPreview = () => {
+    if (!character) return
+    
+    const foundryBuild = getCharacterBuild(character.class, character.race)
+    if (!foundryBuild) {
+      toast.info("Vista Previa de Build", {
+        description: "No hay build de Foundry VTT disponible para esta combinación de clase y raza."
+      })
+      return
+    }
+
+    const build = foundryBuild.build
+    const preview = `Nombre: ${build.name}
+Clase: ${build.class} | Raza: ${build.ancestry}
+Nivel: ${build.level} | Alineamiento: ${build.alignment}
+Estadísticas principales:
+- Fuerza: ${build.abilities.str}
+- Destreza: ${build.abilities.dex} 
+- Constitución: ${build.abilities.con}
+- Inteligencia: ${build.abilities.int}
+- Sabiduría: ${build.abilities.wis}
+- Carisma: ${build.abilities.cha}
+
+CA Total: ${build.acTotal.acTotal}
+HP: ${build.attributes.ancestryhp + build.attributes.classhp}
+Oro inicial: ${build.money.gp}g
+
+Esta build será modificada con tu progreso al completar la aventura.`
+
+    toast.info("Vista Previa de Build de Foundry VTT", {
+      description: preview,
+      duration: 10000
+    })
+  }
+
   const completeAdventureAndExport = async (advId: string) => {
     if (!character || !playerProgress || !adventure || !user) return
 
     try {
-      // Actualizar aventura como completada
+      // Generar datos del personaje para guardar en result_data
+      const characterData = generateCharacterJSON()
+      
+      // Actualizar aventura como completada con los datos del resultado
       const { error } = await supabase
         .from('adventures')
         .update({
           status: 'completed',
           current_stage: adventure.total_stages || 5,
-          completed_at: new Date().toISOString()
+          completed_at: new Date().toISOString(),
+          result_data: characterData
         })
         .eq('id', advId)
         .eq('user_id', user.id)
@@ -716,9 +796,14 @@ function GameContent() {
         return
       }
 
+      // Verificar si hay build disponible para mostrar mensaje apropiado
+      const foundryBuild = getCharacterBuild(character.class, character.race)
+      
       // Mostrar interfaz de exportación
       toast.success("¡Aventura completada!", {
-        description: "Tu aventura ha sido completada exitosamente. Descarga tu personaje.",
+        description: foundryBuild 
+          ? `Tu aventura ha sido completada exitosamente. Se ha generado una build de Foundry VTT para ${character.name} (${character.race} ${character.class}). Descarga tu archivo de personaje.`
+          : `Tu aventura ha sido completada exitosamente. Descarga tu archivo de personaje con todas las estadísticas finales.`,
       })
 
       // Descargar automáticamente el JSON
@@ -795,6 +880,15 @@ function GameContent() {
 
   return (
     <main className="pb-4">
+      <div className="max-w-4xl mx-auto px-4">
+        <BuildInfoBanner
+          buildInfo={buildInfo}
+          characterName={character.name}
+          characterClass={character.class}
+          characterRace={character.race}
+          onExportClick={showBuildPreview}
+        />
+      </div>
       <GameInterface
         character={gameCharacter}
         scenario={scenario}

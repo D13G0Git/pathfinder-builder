@@ -10,6 +10,8 @@ import { AuthLoading } from "@/components/auth-loading"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { Gamepad2, Sword, Users, Star, TrendingUp, Loader2 } from "lucide-react"
+import { useTutorial, TutorialModal } from "@/components/tutorial-modal"
+import { useLanguage } from "@/contexts/language-context"
 
 interface Character {
   id: string
@@ -30,6 +32,8 @@ interface Adventure {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuthGuard()
+  const { startTutorial, hasSeenTutorial, isOpen, closeTutorial } = useTutorial()
+  const { t } = useLanguage()
   const [characters, setCharacters] = useState<Character[]>([])
   const [adventures, setAdventures] = useState<Adventure[]>([])
   const [dataLoading, setDataLoading] = useState(true)
@@ -78,7 +82,7 @@ export default function DashboardPage() {
 
       if (charactersError) {
         console.error("Error cargando personajes:", charactersError)
-        toast.error("Error cargando personajes")
+        toast.error(t('error.loadingCharacters'))
       } else {
         setCharacters(charactersData || [])
       }
@@ -93,31 +97,46 @@ export default function DashboardPage() {
 
       if (adventuresError) {
         console.error("Error cargando aventuras:", adventuresError)
-        toast.error("Error cargando aventuras")
+        toast.error(t('error.loadingAdventures'))
       } else {
         setAdventures(adventuresData || [])
       }
 
     } catch (error) {
       console.error("Error en dashboard:", error)
-      toast.error("Error cargando el dashboard")
+      toast.error(t('error.loadingDashboard'))
     } finally {
       setDataLoading(false)
     }
   }
 
+  // Verificar si debe mostrar el tutorial para nuevos usuarios
+  useEffect(() => {
+    if (!dataLoading && user && characters.length === 0 && adventures.length === 0) {
+      // Si es un usuario nuevo (sin personajes ni aventuras) y no ha visto el tutorial
+      if (!hasSeenTutorial()) {
+        // Esperar un poco para que se cargue completamente el dashboard
+        const timeoutId = setTimeout(() => {
+          startTutorial()
+        }, 1500)
+        
+        return () => clearTimeout(timeoutId)
+      }
+    }
+  }, [dataLoading, user, characters.length, adventures.length, hasSeenTutorial, startTutorial])
+
   // Mostrar loading mientras se autentica o se cargan los datos
   if (authLoading) {
-    return <AuthLoading message="Verificando autenticación..." />
+    return <AuthLoading message={t('auth.verifyingAuth')} />
   }
 
   if (dataLoading && user) {
-    return <AuthLoading message="Cargando tu dashboard..." />
+    return <AuthLoading message={t('auth.loadingDashboard')} />
   }
 
   // Si no hay usuario después de cargar, no mostrar nada (se redirigirá)
   if (!user) {
-    return <AuthLoading message="Redirigiendo al login..." />
+    return <AuthLoading message={t('auth.redirectingLogin')} />
   }
 
   return (
@@ -125,10 +144,10 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground">
-          ¡Bienvenido, {user?.email?.split('@')[0]}!
+          {t('dashboard.welcome').replace('{name}', user?.email?.split('@')[0] || 'Usuario')}
         </h1>
         <p className="text-muted-foreground mt-2">
-          Tu portal para aventuras épicas en el mundo de Pathfinder
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
@@ -136,33 +155,33 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Personajes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.characters')}</CardTitle>
             <Sword className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{characters.length}</div>
             <p className="text-xs text-muted-foreground">
-              {characters.length === 0 ? "Crea tu primer personaje" : "Héroes creados"}
+              {characters.length === 0 ? t('dashboard.createFirstCharacter') : t('dashboard.heroesCreated')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aventuras</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.adventures')}</CardTitle>
             <Gamepad2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{adventures.length}</div>
             <p className="text-xs text-muted-foreground">
-              {adventures.filter(a => a.status === 'in_progress').length} en progreso
+              {adventures.filter(a => a.status === 'in_progress').length} {t('dashboard.inProgress')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nivel Promedio</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.averageLevel')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -173,7 +192,7 @@ export default function DashboardPage() {
               }
             </div>
             <p className="text-xs text-muted-foreground">
-              De tus personajes
+              {t('dashboard.ofYourCharacters')}
             </p>
           </CardContent>
         </Card>
@@ -185,10 +204,10 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sword className="h-5 w-5" />
-              Personajes Recientes
+              {t('dashboard.recentCharacters')}
             </CardTitle>
             <CardDescription>
-              Tus últimos héroes creados
+              {t('dashboard.latestHeroes')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -196,10 +215,10 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground mb-4">
-                  No tienes personajes aún
+                  {t('dashboard.noCharactersYet')}
                 </p>
                 <Button onClick={() => router.push("/character-create")}>
-                  Crear Primer Personaje
+                  {t('dashboard.createFirstCharacterBtn')}
                 </Button>
               </div>
             ) : (
@@ -225,11 +244,11 @@ export default function DashboardPage() {
                       <div>
                         <p className="font-medium">{character.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {character.race} {character.class} - Nivel {character.level}
+                          {character.race} {character.class} - {t('dashboard.level')} {character.level}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline">Nivel {character.level}</Badge>
+                    <Badge variant="outline">{t('dashboard.level')} {character.level}</Badge>
                   </div>
                 ))}
                 <Button 
@@ -237,7 +256,7 @@ export default function DashboardPage() {
                   className="w-full"
                   onClick={() => router.push("/characters")}
                 >
-                  Ver Todos los Personajes
+                  {t('dashboard.viewAllCharacters')}
                 </Button>
               </div>
             )}
@@ -249,10 +268,10 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gamepad2 className="h-5 w-5" />
-              Aventuras Activas
+              {t('dashboard.activeAdventures')}
             </CardTitle>
             <CardDescription>
-              Tus historias en progreso
+              {t('dashboard.storiesInProgress')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -260,13 +279,13 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground mb-4">
-                  No tienes aventuras activas
+                  {t('dashboard.noActiveAdventures')}
                 </p>
                 <Button 
                   onClick={() => router.push("/adventures")}
                   disabled={characters.length === 0}
                 >
-                  {characters.length === 0 ? "Necesitas un personaje primero" : "Comenzar Aventura"}
+                  {characters.length === 0 ? t('dashboard.needCharacterFirst') : t('dashboard.startAdventure')}
                 </Button>
               </div>
             ) : (
@@ -280,13 +299,13 @@ export default function DashboardPage() {
                     <div>
                       <p className="font-medium">{adventure.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Etapa {adventure.current_stage} de {adventure.total_stages}
+                        {t('dashboard.stage')} {adventure.current_stage} {t('dashboard.of')} {adventure.total_stages}
                       </p>
                     </div>
                     <Badge 
                       variant={adventure.status === 'completed' ? 'default' : 'secondary'}
                     >
-                      {adventure.status === 'completed' ? 'Completada' : 'En Progreso'}
+                      {adventure.status === 'completed' ? t('dashboard.completed') : t('dashboard.inProgressStatus')}
                     </Badge>
                   </div>
                 ))}
@@ -295,7 +314,7 @@ export default function DashboardPage() {
                   className="w-full"
                   onClick={() => router.push("/adventures")}
                 >
-                  Ver Todas las Aventuras
+                  {t('dashboard.viewAllAdventures')}
                 </Button>
               </div>
             )}
@@ -306,19 +325,19 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle>Acciones Rápidas</CardTitle>
+          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
           <CardDescription>
-            Accesos directos a las funciones principales
+            {t('dashboard.quickActionsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Button 
               onClick={() => router.push("/character-create")}
               className="h-24 flex flex-col gap-2"
             >
               <Sword className="h-6 w-6" />
-              <span>Crear Personaje</span>
+              <span>{t('dashboard.createCharacter')}</span>
             </Button>
             
             <Button 
@@ -328,7 +347,7 @@ export default function DashboardPage() {
               disabled={characters.length === 0}
             >
               <Users className="h-6 w-6" />
-              <span>Mis Personajes</span>
+              <span>{t('dashboard.myCharacters')}</span>
             </Button>
             
             <Button 
@@ -338,11 +357,34 @@ export default function DashboardPage() {
               disabled={characters.length === 0}
             >
               <Gamepad2 className="h-6 w-6" />
-              <span>Aventuras</span>
+              <span>{t('dashboard.adventuresBtn')}</span>
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={() => {
+                console.log('🎯 [Tutorial] Botón presionado') // Debug
+                // Resetear el tutorial para que se pueda ver de nuevo
+                try {
+                  localStorage.removeItem('tutorial-seen')
+                  console.log('🎯 [Tutorial] LocalStorage limpiado') // Debug
+                } catch (error) {
+                  console.warn('Error removing tutorial flag:', error)
+                }
+                console.log('🎯 [Tutorial] Iniciando tutorial...') // Debug
+                startTutorial()
+              }}
+              className="h-24 flex flex-col gap-2"
+            >
+              <Star className="h-6 w-6" />
+              <span>{t('settings.tutorial.start')}</span>
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal del Tutorial */}
+      <TutorialModal isOpen={isOpen} onClose={closeTutorial} />
     </main>
   )
 }

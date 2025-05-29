@@ -9,6 +9,7 @@ import { Settings, Home, Map, Sword, Shield, Menu, X, LogOut, User, LucideShield
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { useLanguage } from "@/contexts/language-context"
 
 interface SidebarProps {
   className?: string
@@ -22,6 +23,7 @@ interface UserData {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -41,7 +43,7 @@ export function Sidebar({ className }: SidebarProps) {
         if (data?.user) {
           setUser({
             email: data.user.email || "",
-            username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || "Usuario",
+            username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || t('sidebar.user'),
             avatar_url: data.user.user_metadata?.avatar_url
           })
         }
@@ -61,47 +63,47 @@ export function Sidebar({ className }: SidebarProps) {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       
-      toast.success("Sesión cerrada", {
-        description: "Has cerrado sesión exitosamente"
+      toast.success(t('sidebar.sessionClosed'), {
+        description: t('sidebar.sessionClosedDesc')
       })
       
       // Redirigir al login
       window.location.href = "/login"
     } catch (error: any) {
       console.error("Error al cerrar sesión:", error)
-      toast.error("Error", {
-        description: "No se pudo cerrar la sesión"
+      toast.error(t('sidebar.error'), {
+        description: t('sidebar.couldNotSignOut')
       })
     }
   }
 
   const routes = [
     {
-      label: "Panel",
+      label: t('sidebar.panel'),
       icon: Home,
       href: "/dashboard",
       active: pathname === "/dashboard",
     },
     {
-      label: "Aventuras",
+      label: t('sidebar.adventures'),
       icon: Map,
       href: "/adventures",
       active: pathname === "/adventures",
     },
     {
-      label: "Personajes",
+      label: t('sidebar.characters'),
       icon: Sword,
       href: "/characters",
       active: pathname === "/characters",
     },
     {
-      label: "Juego",
+      label: t('sidebar.game'),
       icon: ShieldPlus,
       href: "/game",
       active: pathname === "/game",
     },
     {
-      label: "Configuración",
+      label: t('sidebar.settings'),
       icon: Settings,
       href: "/settings",
       active: pathname === "/settings",
@@ -135,7 +137,7 @@ export function Sidebar({ className }: SidebarProps) {
           <div className="p-6">
             <h2 className="text-2xl font-bold flex items-center">
               <Shield className="mr-2 h-6 w-6" />
-              Pathbuilder
+              {t('sidebar.pathbuilder')}
             </h2>
           </div>
           <div className="flex-1 px-4 space-y-1 overflow-auto">
@@ -201,7 +203,7 @@ export function Sidebar({ className }: SidebarProps) {
                   onClick={handleSignOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar Sesión
+                  {t('sidebar.signOut')}
                 </Button>
               </div>
             ) : (
@@ -210,8 +212,8 @@ export function Sidebar({ className }: SidebarProps) {
                   <User className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium">No autenticado</p>
-                  <p className="text-xs text-muted-foreground">Inicia sesión</p>
+                  <p className="text-sm font-medium">{t('sidebar.notAuthenticated')}</p>
+                  <p className="text-xs text-muted-foreground">{t('sidebar.signIn')}</p>
                 </div>
               </div>
             )}

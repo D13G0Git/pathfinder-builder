@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { Sidebar } from "@/components/sidebar"
-import { Play, Pause, Music, Volume2 } from "lucide-react"
+import { Play, Pause, Music, Volume2, Globe, BookOpen, Languages, Palette } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"
+import { useTutorial } from "@/components/tutorial-modal"
 
 // Lista de pistas de música ambiente disponibles
 const musicTracks = [
@@ -40,6 +42,8 @@ const musicTracks = [
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
+  const { language, setLanguage, t } = useLanguage()
+  const { startTutorial, resetTutorial, TutorialModal } = useTutorial()
   const router = useRouter()
   const [volume, setVolume] = useState(70)
   const [mounted, setMounted] = useState(false)
@@ -351,6 +355,15 @@ export default function SettingsPage() {
     })
   }
 
+  const handleLanguageChange = (newLanguage: 'es' | 'en') => {
+    setLanguage(newLanguage)
+  }
+
+  const handleStartTutorial = () => {
+    resetTutorial()
+    startTutorial()
+  }
+
   if (!mounted || isLoading) {
     return (
       <div className="flex min-h-screen">
@@ -525,6 +538,92 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Selector de Idioma */}
+            <div className="space-y-3">
+              <Label className="flex flex-col gap-1">
+                <span className="font-medium flex items-center gap-2">
+                  <Languages className="h-4 w-4" />
+                  {t('settings.language')}
+                </span>
+                <span className="font-normal text-xs text-muted-foreground">
+                  {t('settings.language.description')}
+                </span>
+              </Label>
+              
+              <div className="space-y-2">
+                <Select value={language} onValueChange={handleLanguageChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un idioma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🇪🇸</span>
+                        <span>{t('language.spanish')}</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="en">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🇺🇸</span>
+                        <span>{t('language.english')}</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <p className="text-xs text-muted-foreground">
+                  {language === 'es' 
+                    ? 'Los cambios se aplicarán inmediatamente'
+                    : 'Changes will be applied immediately'
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Tutorial Interactivo */}
+            <div className="space-y-3">
+              <Label className="flex flex-col gap-1">
+                <span className="font-medium flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  {t('settings.tutorial')}
+                </span>
+                <span className="font-normal text-xs text-muted-foreground">
+                  {t('settings.tutorial.description')}
+                </span>
+              </Label>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleStartTutorial}
+                  variant="outline" 
+                  className="w-full justify-start gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  {t('settings.tutorial.start')}
+                </Button>
+                
+                <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-500">💡</span>
+                    <div>
+                      <p className="font-medium mb-1">
+                        {language === 'es' 
+                          ? 'Recomendado para nuevos usuarios' 
+                          : 'Recommended for new users'
+                        }
+                      </p>
+                      <p>
+                        {language === 'es'
+                          ? 'El tutorial te guiará a través de las funcionalidades principales de la aplicación en unos pocos minutos.'
+                          : 'The tutorial will guide you through the main features of the application in just a few minutes.'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -717,14 +816,6 @@ export default function SettingsPage() {
                   <div className="text-xs text-muted-foreground">Ajusta el tamaño del texto para mejor legibilidad</div>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="text-lg">🌐</div>
-                <div>
-                  <div className="font-medium text-sm">Idiomas</div>
-                  <div className="text-xs text-muted-foreground">Soporte para múltiples idiomas</div>
-              </div>
-            </div>
 
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                 <div className="text-lg">🎮</div>
@@ -758,6 +849,9 @@ export default function SettingsPage() {
       </div>
         </div>
         </main>
+
+        {/* Modal del Tutorial */}
+        <TutorialModal />
 
         {/* Elemento de audio oculto para reproducir música */}
         {musicEnabled && (

@@ -11,9 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { useLanguage } from "@/contexts/language-context"
 
 export function Navbar() {
   const router = useRouter()
+  const { t } = useLanguage()
 
   const handleLogout = () => {
     router.push("/")
@@ -41,15 +43,15 @@ export function Navbar() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Adventurer</p>
+                  <p className="text-sm font-medium leading-none">{t('navbar.adventurer')}</p>
                   <p className="text-xs leading-none text-muted-foreground">adventurer@example.com</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/profile")}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/settings")}>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/profile")}>{t('navbar.profile')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/settings")}>{t('navbar.settings')}</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>{t('navbar.logout')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
