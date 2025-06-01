@@ -13,6 +13,7 @@ Pathfinder Builder es una aplicación web interactiva que te permite crear perso
 - **Biblioteca de personajes**: Revisa tus personajes creados anteriormente y descubre personajes creados por otros usuarios.
 - **Interfaz intuitiva**: Diseño moderno y fácil de usar que te guía a través de toda la experiencia de creación.
 - **Generación de avatares IA**: Crea avatares únicos para tus personajes usando IA.
+- **Sistema de aventuras**: Vive aventuras interactivas con tus personajes creados.
 
 ## 🚀 Tecnologías utilizadas
 
@@ -22,88 +23,174 @@ Pathfinder Builder es una aplicación web interactiva que te permite crear perso
 - **IA**: Replicate (Generación de imágenes)
 - **Deployment**: Netlify
 
-## 🛠️ Configuración del proyecto
+## 📚 Documentación
 
-### Prerrequisitos
+### 🔧 Guías de Configuración
+- **[Configuración del Entorno](./docs/ENVIRONMENT_SETUP.md)** - Guía completa paso a paso para configurar el proyecto desde cero
+- **[Esquema de Base de Datos](./docs/DATABASE_SCHEMA.md)** - Estructura completa de la base de datos y migraciones SQL
+- **[Guía de Despliegue](./docs/DEPLOYMENT_GUIDE.md)** - Instrucciones detalladas para deploy en producción
 
-- Node.js 18+ 
-- npm o yarn
-- Cuenta de Supabase
-- Cuenta de Replicate (para generación de imágenes)
+### 🎮 Características del Juego
+- **[Builds de Foundry VTT](./docs/FOUNDRY_VTT_BUILDS.md)** - Sistema de exportación y builds disponibles
+- **[Funcionalidad de Música](./docs/MUSIC_FEATURE.md)** - Sistema de música ambiental
+- **[Mejoras Responsive](./docs/RESPONSIVE_IMPROVEMENTS.md)** - Optimizaciones para dispositivos móviles
 
-### Instalación
+### 🔧 Desarrollo y API
+- **[Referencia de API](./docs/API_REFERENCE.md)** - Documentación completa de endpoints y funciones
+- **[Lista de Verificación de Producción](./docs/PRODUCTION_CHECKLIST.md)** - Checklist completo para deploy en producción
 
-1. **Clona este repositorio**
-   ```bash
-   git clone https://github.com/tu-usuario/pathfinder-builder.git
-   cd pathfinder-builder
-   ```
+### 🔐 Autenticación y Seguridad
+- **[Arreglos de Autenticación](./docs/AUTH_FIX_SUMMARY.md)** - Resumen de correcciones de autenticación
+- **[Sincronización de Auth](./docs/AUTH_SYNCHRONIZATION_FIX.md)** - Detalles técnicos de sincronización
+- **[Rediseño de Login](./docs/LOGIN_REDESIGN.md)** - Mejoras en la experiencia de inicio de sesión
 
-2. **Instala las dependencias**
-   ```bash
-   npm install
-   ```
+## 🛠️ Configuración Rápida
 
-3. **Configura las variables de entorno**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Edita `.env.local` con tus credenciales:
-   ```env
-   # Supabase (Requerido)
-   NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_publica_anonima
-   
-   # Replicate (Requerido para generación de imágenes)
-   REPLICATE_API_TOKEN=tu_token_api_replicate
-   ```
+### Prerrequisitos del Sistema
 
-4. **Inicia el servidor de desarrollo**
-   ```bash
-   npm run dev
-   ```
+| Herramienta | Versión Mínima | Notas |
+|-------------|----------------|-------|
+| **Node.js** | 18.0.0+ | [Descargar](https://nodejs.org/) |
+| **npm** | 9.0.0+ | Incluido con Node.js |
+| **Git** | 2.0+ | Para clonar el repositorio |
 
-### Configuración de Supabase
+### Verificar Prerrequisitos
 
-1. Crea un nuevo proyecto en [Supabase](https://supabase.com)
-2. Ejecuta las migraciones SQL necesarias (ver `docs/database-schema.sql`)
-3. Configura las políticas RLS según tus necesidades
-4. Obtén la URL y la clave anónima de tu proyecto
+```bash
+# Verificar versiones instaladas
+node --version  # Debe mostrar v18.0.0+
+npm --version   # Debe mostrar 9.0.0+
+git --version   # Cualquier versión 2.0+
+```
 
-### Configuración de Replicate
+### Instalación Básica
 
-1. Regístrate en [Replicate](https://replicate.com/)
-2. Ve a tu perfil → API tokens
-3. Crea un nuevo token y cópialo en tu `.env.local`
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/pathfinder-builder.git
+cd pathfinder-builder
 
-## 📦 Scripts disponibles
+# 2. Instalar dependencias
+npm install
 
-- `npm run dev` - Servidor de desarrollo
-- `npm run build` - Build de producción
-- `npm run start` - Servidor de producción
-- `npm run lint` - Linter ESLint
-- `npm run lint:fix` - Corregir errores de lint automáticamente
-- `npm run type-check` - Verificación de tipos TypeScript
+# 3. Configurar variables de entorno
+cp .env.example .env.local
+# Editar .env.local con tus credenciales (ver abajo)
+
+# 4. Iniciar servidor de desarrollo
+npm run dev
+```
+
+### Variables de Entorno Básicas
+
+Crea un archivo `.env.local` en la raíz del proyecto con:
+
+```env
+# 🔗 Supabase (OBLIGATORIO)
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# 🎨 Replicate API (OBLIGATORIO para generación de imágenes)
+REPLICATE_API_TOKEN=r8_***tu_token_aquí***
+
+# 🔧 Configuración opcional
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Configuración de Servicios Externos
+
+#### 🗄️ Supabase Setup
+
+1. **Crear proyecto**:
+   - Ir a [Supabase](https://supabase.com)
+   - Crear nuevo proyecto
+   - Esperar 2-3 minutos para completar setup
+
+2. **Obtener credenciales**:
+   - `Settings` → `API`
+   - Copiar `Project URL` y `anon public key`
+
+3. **Configurar base de datos**:
+   - Ir a `SQL Editor`
+   - Ejecutar script de [DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md)
+
+#### 🎨 Replicate Setup
+
+1. **Crear cuenta**:
+   - Ir a [Replicate](https://replicate.com)
+   - Registrarse con GitHub o email
+
+2. **Obtener API key**:
+   - Ir a [API Tokens](https://replicate.com/account/api-tokens)
+   - Crear nuevo token
+   - Copiar token (empieza con `r8_`)
+
+3. **Configurar billing** (para producción):
+   - Agregar método de pago
+   - Cada imagen cuesta ~$0.01-0.02
+
+### Verificación de Instalación
+
+```bash
+# Ejecutar todos los checks
+npm run build      # Build de producción
+npm run type-check # Verificación TypeScript
+npm run lint       # Verificación de código
+
+# Si todo funciona, iniciar desarrollo
+npm run dev
+```
+
+**Verificar en el navegador**:
+- Ir a `http://localhost:3000`
+- Registrar nuevo usuario
+- Crear un personaje
+- Generar imagen de avatar
+
+**Para configuración detallada**, consulta [ENVIRONMENT_SETUP.md](./docs/ENVIRONMENT_SETUP.md)
+
+## 📦 Scripts Disponibles
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| `npm run dev` | Servidor de desarrollo con hot-reload | Desarrollo diario |
+| `npm run build` | Build optimizado para producción | Pre-deploy |
+| `npm run start` | Servidor de producción | Post-build |
+| `npm run lint` | Verificación de calidad de código | CI/CD |
+| `npm run lint:fix` | Corrección automática de lint | Desarrollo |
+| `npm run type-check` | Verificación de tipos TypeScript | Pre-commit |
 
 ## 🚀 Despliegue en Producción
 
-### Netlify (Recomendado)
+### Opciones de Deployment
 
-1. **Conecta tu repositorio** en Netlify
-2. **Configura las variables de entorno** en Netlify:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `REPLICATE_API_TOKEN`
-3. **Deploy automático** con cada push a main
+| Plataforma | Costo | Ideal Para | Configuración |
+|------------|--------|------------|---------------|
+| **[Netlify](https://netlify.com)** 🎯 | Gratis | Frontend estático | [Guía detallada](./docs/DEPLOYMENT_GUIDE.md#netlify) |
+| **[Vercel](https://vercel.com)** ⚡ | Gratis | Apps Next.js | [Guía detallada](./docs/DEPLOYMENT_GUIDE.md#vercel) |
+| **[Railway](https://railway.app)** 🌊 | $5/mes | Full-stack | [Guía detallada](./docs/DEPLOYMENT_GUIDE.md#railway) |
 
-### Otros proveedores
+### Deploy Rápido en Netlify
 
-El proyecto está configurado para desplegar en cualquier plataforma que soporte Next.js:
-- Vercel
-- Railway
-- Render
-- DigitalOcean App Platform
+```bash
+# 1. Preparar código
+npm run build
+git add . && git commit -m "Preparar para producción"
+
+# 2. Conectar en Netlify.com
+# - New site from Git
+# - Conectar repositorio GitHub
+# - Build command: npm run build
+# - Publish directory: .next
+
+# 3. Configurar variables de entorno en Netlify
+# NEXT_PUBLIC_SUPABASE_URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY  
+# REPLICATE_API_TOKEN
+```
+
+**Para instrucciones completas**, consulta [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
 
 ## 🧪 Testing y Calidad de Código
 
@@ -134,13 +221,34 @@ npm run build
 
 ## 🤝 Contribuciones
 
-¿Interesado en contribuir? ¡Genial!
+¡Nos encantaría contar con tu ayuda para mejorar Pathfinder Builder! 
 
-1. Fork el proyecto
-2. Crea una rama feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+### Formas de Contribuir
+
+- 🐛 **Reportar bugs** y problemas
+- ✨ **Proponer nuevas características**
+- 📝 **Mejorar documentación**
+- 🎨 **Mejorar UI/UX**
+- 🧪 **Escribir tests**
+- 🛠️ **Corregir código**
+
+### Proceso Rápido
+
+```bash
+# 1. Fork y clonar
+git clone https://github.com/tu-usuario/pathfinder-builder.git
+
+# 2. Crear rama de trabajo
+git checkout -b feature/mi-mejora
+
+# 3. Hacer cambios y commit
+git commit -m "feat: agregar nueva característica"
+
+# 4. Push y crear Pull Request
+git push origin feature/mi-mejora
+```
+
+**Para instrucciones detalladas**, consulta [CONTRIBUTING.md](./docs/CONTRIBUTING.md)
 
 ## 📝 Licencia
 
