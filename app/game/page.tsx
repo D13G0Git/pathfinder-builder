@@ -63,8 +63,8 @@ export default function GamePage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-64">
-        <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando aventura...</div>}>
+      <main className="flex-1 lg:ml-64">
+        <Suspense fallback={<div className="flex justify-center items-center h-screen"><div className="text-base sm:text-lg text-muted-foreground">Cargando aventura...</div></div>}>
           <GameContent />
         </Suspense>
       </main>
@@ -130,13 +130,15 @@ function GameContent() {
 
     const initializeGame = async () => {
       try {
-        if (adventureId && characterId) {
+        if (adventureId) {
+          // Si hay adventureId, cargar aventura existente (ya sea con o sin characterId)
           await loadExistingAdventure(adventureId, user.id)
         } else if (characterId) {
+          // Si solo hay characterId, crear nueva aventura
           await createNewAdventure(characterId, user.id)
         } else {
           toast.error("Error", {
-            description: "No se especificó un personaje para el juego",
+            description: "No se especificó un personaje o aventura para el juego",
           })
           router.push("/characters")
         }
@@ -658,59 +660,30 @@ function GameContent() {
     // Obtener build de Foundry VTT basada en clase y raza
     const foundryBuild = getCharacterBuild(character.class, character.race)
 
+    if (!foundryBuild) {
+      // Si no hay build disponible, retornar null
+      return null
+    }
+
+    // Generar la estructura simplificada como en CharacterExport
     const characterData = {
-      version: "1.0",
-      exportDate: new Date().toISOString(),
-      character: {
-        id: character.id,
+      success: foundryBuild.success,
+      build: {
+        ...foundryBuild.build,
+        // Actualizar el nombre con el nombre del personaje del juego
         name: character.name,
-        class: character.class,
-        race: character.race,
-        level: character.level,
-        gender: character.gender,
-        avatar: character.avatar
-      },
-      stats: {
-        health: playerProgress.character_stats.health,
-        gold: playerProgress.character_stats.gold,
-        experience: playerProgress.character_stats.experience,
-        strength: playerProgress.character_stats.strength
-      },
-      adventure: {
-        id: adventure?.id,
-        name: adventure?.name,
-        description: adventure?.description,
-        completed: true,
-        completedAt: new Date().toISOString(),
-        finalStage: playerProgress.current_scenario_number
-      },
-      // Incluir build de Foundry VTT si está disponible
-      foundryVTT: foundryBuild ? {
-        success: foundryBuild.success,
-        build: {
-          ...foundryBuild.build,
-          // Actualizar el nombre con el nombre del personaje del juego
-          name: character.name,
-          // Actualizar nivel si el personaje ganó experiencia
-          level: Math.max(character.level, Math.floor(playerProgress.character_stats.experience / 100) + 1),
-          // Actualizar oro con el oro ganado en la aventura
-          money: {
-            ...foundryBuild.build.money,
-            gp: foundryBuild.build.money.gp + playerProgress.character_stats.gold
-          },
-          // Actualizar salud si cambió durante la aventura
-          attributes: {
-            ...foundryBuild.build.attributes,
-            bonushp: Math.max(0, playerProgress.character_stats.health - 100)
-          }
+        // Actualizar nivel si el personaje ganó experiencia
+        level: Math.max(character.level, Math.floor(playerProgress.character_stats.experience / 100) + 1),
+        // Actualizar oro con el oro ganado en la aventura
+        money: {
+          ...foundryBuild.build.money,
+          gp: foundryBuild.build.money.gp + playerProgress.character_stats.gold
+        },
+        // Actualizar salud si cambió durante la aventura
+        attributes: {
+          ...foundryBuild.build.attributes,
+          bonushp: Math.max(0, playerProgress.character_stats.health - 100)
         }
-      } : null,
-      // Instrucciones para el usuario
-      instructions: {
-        foundryVTT: foundryBuild ? 
-          "Esta build puede ser importada directamente en Foundry VTT. Ve a 'Crear Personaje' -> 'Importar' y pega el contenido de 'foundryVTT' en el campo de importación." :
-          "No hay build disponible para esta combinación de clase y raza. Puedes crear el personaje manualmente en Foundry VTT usando las estadísticas proporcionadas.",
-        general: "Este archivo contiene todas las estadísticas y progreso de tu personaje después de completar la aventura."
       }
     }
 
@@ -719,7 +692,12 @@ function GameContent() {
 
   const downloadCharacterJSON = () => {
     const characterData = generateCharacterJSON()
-    if (!characterData) return
+    if (!characterData) {
+      toast.error("Build no disponible", {
+        description: `No hay build de Foundry VTT disponible para ${character?.race} ${character?.class}. Las builds están disponibles para combinaciones específicas de clase y raza.`
+      })
+      return
+    }
 
     const jsonString = JSON.stringify(characterData, null, 2)
     const blob = new Blob([jsonString], { type: 'application/json' })
@@ -727,7 +705,7 @@ function GameContent() {
     
     const link = document.createElement('a')
     link.href = url
-    link.download = `${character?.name}_aventura_completada.json`
+    link.download = `${character?.name}_foundry_build.json`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -776,14 +754,14 @@ Esta build será modificada con tu progreso al completar la aventura.`
       // Generar datos del personaje para guardar en result_data
       const characterData = generateCharacterJSON()
       
-      // Actualizar aventura como completada con los datos del resultado
+      // Actualizar aventura como completada con los datos del resultado (si están disponibles)
       const { error } = await supabase
         .from('adventures')
         .update({
           status: 'completed',
           current_stage: adventure.total_stages || 5,
           completed_at: new Date().toISOString(),
-          result_data: characterData
+          result_data: characterData // Puede ser null si no hay build
         })
         .eq('id', advId)
         .eq('user_id', user.id)
@@ -799,15 +777,20 @@ Esta build será modificada con tu progreso al completar la aventura.`
       // Verificar si hay build disponible para mostrar mensaje apropiado
       const foundryBuild = getCharacterBuild(character.class, character.race)
       
-      // Mostrar interfaz de exportación
-      toast.success("¡Aventura completada!", {
-        description: foundryBuild 
-          ? `Tu aventura ha sido completada exitosamente. Se ha generado una build de Foundry VTT para ${character.name} (${character.race} ${character.class}). Descarga tu archivo de personaje.`
-          : `Tu aventura ha sido completada exitosamente. Descarga tu archivo de personaje con todas las estadísticas finales.`,
-      })
+      if (foundryBuild && characterData) {
+        // Mostrar interfaz de exportación exitosa
+        toast.success("¡Aventura completada!", {
+          description: `Tu aventura ha sido completada exitosamente. Se ha generado una build de Foundry VTT para ${character.name} (${character.race} ${character.class}). Descarga tu archivo de personaje.`,
+        })
 
-      // Descargar automáticamente el JSON
-      downloadCharacterJSON()
+        // Descargar automáticamente el JSON
+        downloadCharacterJSON()
+      } else {
+        // Sin build disponible
+        toast.success("¡Aventura completada!", {
+          description: `Tu aventura ha sido completada exitosamente. No hay build de Foundry VTT disponible para ${character.race} ${character.class}, pero puedes crear el personaje manualmente.`,
+        })
+      }
 
       // Redirigir después de un pequeño delay
       setTimeout(() => {
@@ -833,24 +816,24 @@ Esta build será modificada con tu progreso al completar la aventura.`
 
   if (isAuthenticating) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-lg text-muted-foreground">Verificando autenticación...</div>
+      <div className="flex justify-center items-center h-screen p-4">
+        <div className="text-base sm:text-lg text-muted-foreground text-center">Verificando autenticación...</div>
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-lg text-muted-foreground">Cargando tu aventura...</div>
+      <div className="flex justify-center items-center h-screen p-4">
+        <div className="text-base sm:text-lg text-muted-foreground text-center">Cargando tu aventura...</div>
       </div>
     )
   }
 
   if (!character || !currentScenario || !playerProgress) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-lg text-muted-foreground">Error cargando la aventura</div>
+      <div className="flex justify-center items-center h-screen p-4">
+        <div className="text-base sm:text-lg text-muted-foreground text-center">Error cargando la aventura</div>
       </div>
     )
   }
@@ -879,8 +862,8 @@ Esta build será modificada con tu progreso al completar la aventura.`
   }
 
   return (
-    <main className="pb-4">
-      <div className="max-w-4xl mx-auto px-4">
+    <main className="pb-4 sm:pb-6 lg:pb-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <BuildInfoBanner
           buildInfo={buildInfo}
           characterName={character.name}

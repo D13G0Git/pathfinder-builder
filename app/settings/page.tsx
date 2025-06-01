@@ -368,10 +368,10 @@ export default function SettingsPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 md:ml-64">
-          <div className="container mx-auto px-4 py-8 max-w-2xl">
-            <div className="flex justify-center items-center h-64">
-              <div className="text-lg text-muted-foreground">Cargando...</div>
+        <main className="flex-1 lg:ml-64">
+          <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
+            <div className="flex justify-center items-center h-48 sm:h-64">
+              <div className="text-base sm:text-lg text-muted-foreground">Cargando...</div>
             </div>
           </div>
         </main>
@@ -382,33 +382,33 @@ export default function SettingsPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-64">
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Ajustes</h1>
-        <p className="text-muted-foreground">Personaliza tu experiencia de juego y gestiona tu cuenta.</p>
+      <main className="flex-1 lg:ml-64">
+        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
+      <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ajustes</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Personaliza tu experiencia de juego y gestiona tu cuenta.</p>
         {user && (
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Sesión iniciada como: <span className="font-medium">{user.email}</span>
           </p>
         )}
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {/* Configuraciones Principales */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center text-base sm:text-lg">
               <span className="mr-2">⚙️</span>
               Configuración Principal
             </CardTitle>
-            <CardDescription>Ajusta los elementos básicos de la aplicación</CardDescription>
+            <CardDescription className="text-sm">Ajusta los elementos básicos de la aplicación</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Cambio de Tema */}
               <div className="flex items-center justify-between">
               <Label htmlFor="theme-toggle" className="flex flex-col gap-1">
-                <span className="font-medium">Tema Oscuro</span>
+                <span className="font-medium text-sm sm:text-base">Tema Oscuro</span>
                   <span className="font-normal text-xs text-muted-foreground">
                   Alterna entre modo claro y oscuro
                   </span>
@@ -421,15 +421,15 @@ export default function SettingsPage() {
               </div>
 
             {/* Control de Volumen */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Label htmlFor="volume" className="flex flex-col gap-1">
-                <span className="font-medium">Volumen de la Aplicación</span>
+                <span className="font-medium text-sm sm:text-base">Volumen de la Aplicación</span>
                   <span className="font-normal text-xs text-muted-foreground">
                   Controla el volumen general de sonidos y música
                   </span>
                 </Label>
               <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
                   <span>🔇 Silencio</span>
                   <span className="font-medium">{volume}%</span>
                   <span>🔊 Alto</span>
@@ -447,10 +447,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Control de Música */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Label className="flex flex-col gap-1">
-                <span className="font-medium flex items-center gap-2">
-                  <Music className="h-4 w-4" />
+                <span className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                  <Music className="h-3 w-3 sm:h-4 sm:w-4" />
                   Música de Fondo
                 </span>
                 <span className="font-normal text-xs text-muted-foreground">
@@ -472,7 +472,7 @@ export default function SettingsPage() {
 
               {/* Controles de música */}
               {musicEnabled && (
-                <div className="space-y-4 pt-2 border-t">
+                <div className="space-y-3 sm:space-y-4 pt-2 border-t">
                   {/* Selector de pista */}
                   <div className="space-y-2">
                     <Label htmlFor="track-select" className="text-sm font-medium">
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                         {musicTracks.map((track) => (
                           <SelectItem key={track.id} value={track.id}>
                             <div className="flex flex-col">
-                              <span className="font-medium">{track.name}</span>
+                              <span className="font-medium text-sm">{track.name}</span>
                               <span className="text-xs text-muted-foreground">{track.description}</span>
                             </div>
                           </SelectItem>
@@ -496,29 +496,29 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Controles de reproducción */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                     <Button
                       onClick={toggleMusic}
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 w-full sm:w-auto text-xs sm:text-sm"
                     >
                       {isPlaying ? (
                         <>
-                          <Pause className="h-4 w-4" />
+                          <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                           Pausar
                         </>
                       ) : (
                         <>
-                          <Play className="h-4 w-4" />
+                          <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                           Reproducir
                         </>
                       )}
                     </Button>
                     
                     <div className="flex items-center gap-2 flex-1">
-                      <Volume2 className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Volumen: {volume}%</span>
+                      <Volume2 className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm text-muted-foreground">Volumen: {volume}%</span>
                     </div>
                   </div>
 
@@ -541,10 +541,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Selector de Idioma */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Label className="flex flex-col gap-1">
-                <span className="font-medium flex items-center gap-2">
-                  <Languages className="h-4 w-4" />
+                <span className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                  <Languages className="h-3 w-3 sm:h-4 sm:w-4" />
                   {t('settings.language')}
                 </span>
                 <span className="font-normal text-xs text-muted-foreground">
@@ -583,10 +583,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Tutorial Interactivo */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Label className="flex flex-col gap-1">
-                <span className="font-medium flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
+                <span className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                  <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                   {t('settings.tutorial')}
                 </span>
                 <span className="font-normal text-xs text-muted-foreground">
@@ -594,13 +594,13 @@ export default function SettingsPage() {
                 </span>
               </Label>
               
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Button 
                   onClick={handleStartTutorial}
                   variant="outline" 
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 text-xs sm:text-sm"
                 >
-                  <BookOpen className="h-4 w-4" />
+                  <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                   {t('settings.tutorial.start')}
                 </Button>
                 
@@ -630,24 +630,24 @@ export default function SettingsPage() {
 
         {/* Información de Cuenta */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center text-base sm:text-lg">
               <span className="mr-2">👤</span>
               Información de Cuenta
             </CardTitle>
-            <CardDescription>Gestiona tu cuenta y seguridad</CardDescription>
+            <CardDescription className="text-sm">Gestiona tu cuenta y seguridad</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Dirección de Email</Label>
-              <div className="flex items-center gap-2">
+              <Label htmlFor="email" className="text-sm sm:text-base">Dirección de Email</Label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base"
                   placeholder="tu@email.com"
                 />
                 <Button 
@@ -655,6 +655,7 @@ export default function SettingsPage() {
                   size="sm"
                   onClick={handleEmailChange}
                   disabled={!email || email === user?.email}
+                  className="w-full sm:w-auto text-xs sm:text-sm"
                 >
                   Cambiar
                 </Button>
@@ -668,12 +669,12 @@ export default function SettingsPage() {
 
             {/* Contraseña */}
             <div className="space-y-2">
-              <Label>Contraseña</Label>
-              <div className="flex items-center gap-2">
+              <Label className="text-sm sm:text-base">Contraseña</Label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="flex-1 text-sm text-muted-foreground">••••••••••••</div>
                 <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
                       Cambiar
                     </Button>
                   </DialogTrigger>

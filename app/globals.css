@@ -10,6 +10,30 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Utilidades para responsividad móvil */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Mejoras para elementos interactivos en móvil */
+  .mobile-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Scroll suave en móvil */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
 }
 
 /* Animaciones personalizadas para el login */
@@ -59,6 +83,62 @@ body {
 
   .animate-slide-up {
     animation: slideUp 0.7s ease-out forwards;
+  }
+  
+  /* Componentes responsivos */
+  .responsive-card {
+    @apply w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl;
+  }
+  
+  .responsive-button {
+    @apply h-9 sm:h-10 text-sm sm:text-base px-3 sm:px-4;
+  }
+  
+  .responsive-input {
+    @apply h-9 sm:h-10 text-sm sm:text-base;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base;
+  }
+  
+  .responsive-heading {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Mejoras para sidebar móvil */
+  .mobile-sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-30 lg:hidden;
+  }
+  
+  .mobile-sidebar {
+    @apply fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out lg:translate-x-0;
+  }
+  
+  /* Mejoras para formularios móviles */
+  .mobile-form-container {
+    @apply p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6;
+  }
+  
+  .mobile-form-field {
+    @apply space-y-2;
+  }
+  
+  .mobile-form-label {
+    @apply text-sm font-medium;
+  }
+  
+  /* Mejoras para navegación móvil */
+  .mobile-nav-item {
+    @apply flex items-center py-2.5 sm:py-3 px-3 sm:px-4 text-sm rounded-md transition-colors;
+  }
+  
+  .mobile-nav-icon {
+    @apply mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0;
   }
 }
 
@@ -160,6 +240,39 @@ body {
   filter: grayscale(100%);
 }
 
+/* Mejoras específicas para móvil */
+@media (max-width: 640px) {
+  /* Asegurar que los elementos no se desborden */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Mejorar el espaciado en móvil */
+  .space-y-mobile > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  /* Botones más grandes para mejor usabilidad táctil */
+  .btn-mobile {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Texto más legible en móvil */
+  .text-mobile {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+/* Mejoras para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -221,22 +334,20 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-background: 0 0% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 14.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    @apply border-border mobile-tap-highlight;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground smooth-scroll;
   }
 }

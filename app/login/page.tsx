@@ -2,8 +2,8 @@ import { LoginForm } from "@/components/login-form"
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex">
-      {/* Panel izquierdo con fondo épico acromático */}
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Panel izquierdo con fondo épico acromático - Oculto en móvil */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/40" />
         
@@ -89,14 +89,35 @@ export default function LoginPage() {
       </div>
 
       {/* Panel derecho con formulario acromático */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden min-h-screen lg:min-h-0">
         {/* Efectos de fondo sutil en escala de grises */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 right-20 w-32 h-32 bg-gray-200/15 dark:bg-gray-500/8 rounded-full blur-xl animate-pulse" />
           <div className="absolute bottom-32 left-20 w-24 h-24 bg-gray-300/15 dark:bg-gray-400/8 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         
-        <div className="w-full max-w-md relative z-10">
+        {/* Header móvil - Solo visible en móvil */}
+        <div className="absolute top-6 left-6 lg:hidden">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-primary/10 rounded-lg backdrop-blur-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold">Pathfinder Adventure</h1>
+          </div>
+        </div>
+        
+        <div className="w-full max-w-sm sm:max-w-md relative z-10 mt-16 lg:mt-0">
           <LoginForm />
         </div>
       </div>

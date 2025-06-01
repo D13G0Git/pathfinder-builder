@@ -182,11 +182,11 @@ export default function AdventuresPage() {
     
     return (
       <Card key={adventure.id} className="overflow-hidden border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
-        <div className="md:flex">
+        <div className="flex flex-col lg:flex-row">
           {/* Avatar del personaje */}
-          <div className="relative h-48 md:h-auto md:w-1/4 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="relative h-40 sm:h-48 lg:h-auto lg:w-1/4 flex items-center justify-center bg-gray-50 dark:bg-gray-900 flex-shrink-0">
             {adventure.character.avatar ? (
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg">
                 <Image
                   src={adventure.character.avatar}
                   alt={adventure.character.name}
@@ -195,33 +195,33 @@ export default function AdventuresPage() {
                 />
               </div>
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                <span className="text-4xl">⚔️</span>
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <span className="text-2xl sm:text-4xl">⚔️</span>
               </div>
             )}
           </div>
           
-          <div className="flex-1">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-xl">{adventure.name}</CardTitle>
-                  <CardDescription className="mt-1">{adventure.description}</CardDescription>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <CardHeader className="pb-2 p-4 sm:p-6">
+              <div className="flex flex-col lg:flex-row justify-between items-start gap-3 lg:gap-4">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg sm:text-xl truncate">{adventure.name}</CardTitle>
+                  <CardDescription className="mt-1 text-sm">{adventure.description}</CardDescription>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-2">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       Personaje: <span className="font-medium">{adventure.character.name}</span>
                     </span>
-                    <Badge variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
+                    <Badge variant="outline" className="text-xs border-gray-300 dark:border-gray-600 w-fit">
                       {adventure.character.race} {adventure.character.class}
                     </Badge>
                   </div>
                 </div>
                 <Badge
-                  className={
+                  className={`text-xs flex-shrink-0 ${
                     adventure.status === "completed"
                       ? "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
                       : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-500"
-                  }
+                  }`}
                 >
                   {adventure.status === "completed" ? "Completada" : "En Progreso"}
                 </Badge>
@@ -372,14 +372,14 @@ export default function AdventuresPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 md:ml-64">
-          <div className="p-6 space-y-6">
-            <div className="m-4">
-              <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
-              <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
+        <main className="flex-1 lg:ml-64">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+            <div className="space-y-2 sm:space-y-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Aventuras</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
             </div>
-            <div className="flex justify-center items-center h-64">
-              <div className="text-lg text-muted-foreground">Cargando aventuras...</div>
+            <div className="flex justify-center items-center h-48 sm:h-64">
+              <div className="text-base sm:text-lg text-muted-foreground">Cargando aventuras...</div>
             </div>
           </div>
         </main>
@@ -390,13 +390,13 @@ export default function AdventuresPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-64">
-        <div className="p-6 space-y-6">
-          <div className="m-4">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Aventuras</h1>
-            <p className="text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
+      <main className="flex-1 lg:ml-64">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+          <div className="space-y-2 sm:space-y-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Aventuras</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Explora tus aventuras y viajes por el reino.</p>
             {adventures.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Total: {adventures.length} aventura{adventures.length !== 1 ? 's' : ''} • 
                 En progreso: {inProgressAdventures.length} • 
                 Completadas: {completedAdventures.length}
@@ -405,68 +405,74 @@ export default function AdventuresPage() {
           </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="m-4">
-          <TabsTrigger value="all">
-            Todas las Aventuras ({adventures.length})
+        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex mb-4 sm:mb-6">
+          <TabsTrigger value="all" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Todas las Aventuras</span>
+            <span className="sm:hidden">Todas</span>
+            <span className="ml-1">({adventures.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="active">
-            En Progreso ({inProgressAdventures.length})
+          <TabsTrigger value="active" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">En Progreso</span>
+            <span className="sm:hidden">Activas</span>
+            <span className="ml-1">({inProgressAdventures.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completadas ({completedAdventures.length})
+          <TabsTrigger value="completed" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Completadas</span>
+            <span className="sm:hidden">Completas</span>
+            <span className="ml-1">({completedAdventures.length})</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-6">
+        <TabsContent value="all" className="space-y-4 sm:space-y-6">
           {adventures.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="m-4 rounded-full bg-gray-100 dark:bg-gray-800 p-4 w-16 h-16 mx-auto flex items-center justify-center">
-                <Scroll className="h-8 w-8 text-gray-600 dark:text-gray-400" />
+            <div className="text-center py-8 sm:py-12">
+              <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-3 sm:p-4 w-12 h-12 sm:w-16 sm:h-16 mx-auto flex items-center justify-center mb-4 sm:mb-6">
+                <Scroll className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 dark:text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium mb-2">No tienes aventuras</h3>
-              <p className="text-muted-foreground mb-6">
+              <h3 className="text-base sm:text-lg font-medium mb-2">No tienes aventuras</h3>
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">
                 Crea un personaje y comienza tu primera aventura en Pathfinder
               </p>
               <Button 
                 onClick={() => router.push("/characters")}
-                className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
+                className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white w-full sm:w-auto text-xs sm:text-sm"
               >
-                <Swords className="h-4 w-4 mr-2" />
+                <Swords className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                 Ver Personajes
               </Button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {adventures.map(renderAdventureCard)}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="active" className="space-y-6">
+        <TabsContent value="active" className="space-y-4 sm:space-y-6">
           {inProgressAdventures.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">No hay aventuras en progreso</h3>
-              <p className="text-muted-foreground">
+            <div className="text-center py-8 sm:py-12">
+              <h3 className="text-base sm:text-lg font-medium mb-2">No hay aventuras en progreso</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Comienza una nueva aventura con uno de tus personajes
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {inProgressAdventures.map(renderAdventureCard)}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-6">
+        <TabsContent value="completed" className="space-y-4 sm:space-y-6">
           {completedAdventures.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">No hay aventuras completadas</h3>
-              <p className="text-muted-foreground">
+            <div className="text-center py-8 sm:py-12">
+              <h3 className="text-base sm:text-lg font-medium mb-2">No hay aventuras completadas</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Las aventuras completadas aparecerán aquí
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {completedAdventures.map(renderAdventureCard)}
             </div>
           )}

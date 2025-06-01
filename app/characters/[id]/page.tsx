@@ -399,20 +399,20 @@ export default function CharacterDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <Button 
             variant="outline" 
             onClick={() => router.push("/characters")}
-            className="border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 w-full sm:w-auto text-xs sm:text-sm"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
             Volver
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Cargando...</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Cargando...</h1>
         </div>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-muted-foreground">Cargando detalles del personaje...</div>
+        <div className="flex justify-center items-center h-48 sm:h-64">
+          <div className="text-base sm:text-lg text-muted-foreground">Cargando detalles del personaje...</div>
         </div>
       </div>
     )
@@ -420,17 +420,17 @@ export default function CharacterDetailsPage() {
 
   if (!character) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <Button 
             variant="outline" 
             onClick={() => router.push("/characters")}
-            className="border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 w-full sm:w-auto text-xs sm:text-sm"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
             Volver
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Personaje no encontrado</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Personaje no encontrado</h1>
         </div>
       </div>
     )
@@ -439,20 +439,20 @@ export default function CharacterDetailsPage() {
   const hasAdventureData = character.character_data && typeof character.character_data === 'object' && character.character_data.build
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         <Button 
           variant="outline" 
           onClick={() => router.push("/characters")}
-          className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto text-xs sm:text-sm"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
           Volver
         </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">{character.name}</h1>
-          <p className="text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">{character.name}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {character.race} {character.class} - Nivel {character.level}
           </p>
         </div>
@@ -460,10 +460,10 @@ export default function CharacterDetailsPage() {
 
       {/* Información del Personaje */}
       <Card>
-        <CardHeader>
-          <div className="flex items-start gap-6">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {character.avatar && (
-              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg">
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg mx-auto sm:mx-0 flex-shrink-0">
                 <Image
                   src={character.avatar}
                   alt={character.name}
@@ -472,19 +472,19 @@ export default function CharacterDetailsPage() {
                 />
               </div>
             )}
-            <div className="flex-1">
-              <CardTitle className="text-2xl">{character.name}</CardTitle>
-              <CardDescription className="text-lg mt-1">
+            <div className="flex-1 text-center sm:text-left min-w-0">
+              <CardTitle className="text-xl sm:text-2xl truncate">{character.name}</CardTitle>
+              <CardDescription className="text-base sm:text-lg mt-1">
                 {character.race} {character.class}
               </CardDescription>
-              <div className="flex gap-2 mt-3">
-                <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+              <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 text-xs">
                   Nivel {character.level}
                 </Badge>
-                <Badge variant="outline" className="border-gray-400 dark:border-gray-500">
+                <Badge variant="outline" className="border-gray-400 dark:border-gray-500 text-xs">
                   {character.gender}
                 </Badge>
-                <Badge variant="outline" className="border-gray-400 dark:border-gray-500">
+                <Badge variant="outline" className="border-gray-400 dark:border-gray-500 text-xs">
                   Creado {new Date(character.created_at).toLocaleDateString()}
                 </Badge>
               </div>
@@ -494,84 +494,84 @@ export default function CharacterDetailsPage() {
       </Card>
 
       <Tabs defaultValue="adventure" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="adventure">Aventura</TabsTrigger>
-          {hasAdventureData && <TabsTrigger value="stats">Estadísticas Completas</TabsTrigger>}
+        <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-2 sm:flex">
+          <TabsTrigger value="adventure" className="text-xs sm:text-sm">Aventura</TabsTrigger>
+          {hasAdventureData && <TabsTrigger value="stats" className="text-xs sm:text-sm">Estadísticas Completas</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="adventure" className="space-y-6">
+        <TabsContent value="adventure" className="space-y-4 sm:space-y-6">
           {/* Aventuras */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                 Estado de Aventura
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Gestiona las aventuras de este personaje
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {adventures.length === 0 ? (
-                <div className="text-center py-12 space-y-4">
-                  <div className="text-6xl mb-4">🗺️</div>
-                  <h3 className="text-lg font-medium">Sin aventuras activas</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
+                <div className="text-center py-8 sm:py-12 space-y-3 sm:space-y-4">
+                  <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🗺️</div>
+                  <h3 className="text-base sm:text-lg font-medium">Sin aventuras activas</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
                     Este personaje no está participando en ninguna aventura actualmente.
                     ¡Es el momento perfecto para comenzar una nueva historia épica!
                   </p>
-                  <div className="flex gap-3 justify-center mt-6">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center mt-4 sm:mt-6">
                     <Button 
                       onClick={() => router.push(`/game?character=${character.id}`)}
-                      className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white"
+                      className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white w-full sm:w-auto text-xs sm:text-sm"
                     >
-                      <Gamepad2 className="h-4 w-4 mr-2" />
+                      <Gamepad2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Comenzar Aventura
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {adventures.map((adventure) => (
                     <Card key={adventure.id} className="border-gray-200 dark:border-gray-700">
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{adventure.name}</CardTitle>
-                            <CardDescription>{adventure.description}</CardDescription>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-sm text-muted-foreground">
+                      <CardHeader className="p-4 sm:p-6">
+                        <div className="flex flex-col lg:flex-row justify-between items-start gap-3 lg:gap-4">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base sm:text-lg truncate">{adventure.name}</CardTitle>
+                            <CardDescription className="text-sm mt-1">{adventure.description}</CardDescription>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-2">
+                              <span className="text-xs sm:text-sm text-muted-foreground">
                                 Progreso: {adventure.current_stage}/{adventure.total_stages} etapas
                               </span>
                               {adventure.completed_at && (
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-xs sm:text-sm text-muted-foreground">
                                   • Completada {new Date(adventure.completed_at).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
                           </div>
                           <Badge
-                            className={
+                            className={`text-xs flex-shrink-0 ${
                               adventure.status === "completed"
                                 ? "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
                                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-500"
-                            }
+                            }`}
                           >
                             {adventure.status === "completed" ? "Completada" : "En Progreso"}
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardFooter className="flex justify-between gap-2">
+                      <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 p-4 sm:p-6">
                         {adventure.status === "completed" ? (
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             {adventure.result_data ? (
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button 
                                     variant="outline"
-                                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto text-xs sm:text-sm"
                                   >
-                                    <Trophy className="h-4 w-4 mr-2" />
+                                    <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                     Ver Resultado
                                   </Button>
                                 </DialogTrigger>

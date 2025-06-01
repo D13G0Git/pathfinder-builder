@@ -190,28 +190,37 @@ export function GameScenario({ initialScenario }: GameScenarioProps) {
   }, [user, selectedCharacterId])
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Cargando...</div>
+    return (
+      <div className="flex justify-center items-center h-screen p-4">
+        <div className="text-base sm:text-lg text-muted-foreground">Cargando...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
       {user ? (
-        <div className="mb-6 p-4 bg-muted rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Tu Aventura</h2>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted rounded-lg">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2">Tu Aventura</h2>
           {characters.length > 0 ? (
-            <div className="space-y-2">
-              <p>Selecciona tu personaje:</p>
+            <div className="space-y-2 sm:space-y-3">
+              <p className="text-sm sm:text-base">Selecciona tu personaje:</p>
               <Select 
                 value={selectedCharacterId} 
                 onValueChange={setSelectedCharacterId}
               >
-                <SelectTrigger className="w-full max-w-xs">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un personaje" />
                 </SelectTrigger>
                 <SelectContent>
                   {characters.map((character) => (
                     <SelectItem key={character.id} value={character.id}>
-                      {character.name} - {character.class} {character.race} (Nivel {character.level})
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <span className="font-medium text-sm sm:text-base">{character.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {character.class} {character.race} (Nivel {character.level})
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -219,25 +228,33 @@ export function GameScenario({ initialScenario }: GameScenarioProps) {
             </div>
           ) : (
             <div className="text-amber-500">
-              <p>No tienes personajes creados.</p>
-              <Button variant="outline" className="mt-2" onClick={() => window.location.href = "/character-create"}>
+              <p className="text-sm sm:text-base">No tienes personajes creados.</p>
+              <Button 
+                variant="outline" 
+                className="mt-2 w-full sm:w-auto text-xs sm:text-sm" 
+                onClick={() => window.location.href = "/character-create"}
+              >
                 Crear un personaje
               </Button>
             </div>
           )}
         </div>
       ) : (
-        <div className="mb-6 p-4 bg-muted rounded-lg text-amber-500">
-          <p>Inicia sesión para guardar tu progreso y tus decisiones.</p>
-          <Button variant="outline" className="mt-2" onClick={() => window.location.href = "/login"}>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted rounded-lg text-amber-500">
+          <p className="text-sm sm:text-base mb-2">Inicia sesión para guardar tu progreso y tus decisiones.</p>
+          <Button 
+            variant="outline" 
+            className="w-full sm:w-auto text-xs sm:text-sm" 
+            onClick={() => window.location.href = "/login"}
+          >
             Iniciar Sesión
           </Button>
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mb-6">{currentScenario.title}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center sm:text-left">{currentScenario.title}</h1>
 
-      <div className="relative w-full h-[400px] rounded-lg overflow-hidden mb-6">
+      <div className="relative w-full h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden mb-4 sm:mb-6">
         <Image
           src={currentScenario.image || "/placeholder.svg"}
           alt={currentScenario.title}
@@ -247,25 +264,33 @@ export function GameScenario({ initialScenario }: GameScenarioProps) {
         />
       </div>
 
-      <div className="prose dark:prose-invert max-w-none mb-8">
-        <p className="text-lg">{currentScenario.description}</p>
+      <div className="prose dark:prose-invert max-w-none mb-6 sm:mb-8">
+        <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-center sm:text-left">
+          {currentScenario.description}
+        </p>
       </div>
 
       {!gameFinished ? (
         <>
-          <h2 className="text-xl font-semibold mb-4">¿Qué vas a hacer?</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-center sm:text-left">¿Qué vas a hacer?</h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {currentScenario.choices.map((choice) => (
               <Card
                 key={choice.id}
-                className="hover:bg-accent transition-colors cursor-pointer"
+                className="hover:bg-accent transition-colors cursor-pointer border-gray-200 dark:border-gray-700"
                 onClick={() => handleChoiceClick(choice.nextScenarioId, choice.id)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg">{choice.text}</span>
-                    <Button variant="ghost" size="sm">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                    <span className="text-sm sm:text-base lg:text-lg leading-relaxed flex-1">
+                      {choice.text}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="w-full sm:w-auto text-xs sm:text-sm min-h-[44px] sm:min-h-[36px] touch-manipulation"
+                    >
                       Elegir
                     </Button>
                   </div>
@@ -275,16 +300,21 @@ export function GameScenario({ initialScenario }: GameScenarioProps) {
           </div>
         </>
       ) : (
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           {user && selectedCharacterId && characters.length > 0 ? (
             <CharacterExport 
               character={characters.find(c => c.id === selectedCharacterId) as UserCharacter} 
               decisions={userDecisions}
             />
           ) : (
-            <div className="text-center p-4 border rounded-md bg-amber-50 dark:bg-amber-950">
-              <p className="mb-2">Necesitas iniciar sesión y seleccionar un personaje para exportar tu aventura.</p>
-              <Button onClick={() => window.location.href = "/login"}>
+            <div className="text-center p-4 sm:p-6 border rounded-md bg-amber-50 dark:bg-amber-950">
+              <p className="mb-3 sm:mb-4 text-sm sm:text-base">
+                Necesitas iniciar sesión y seleccionar un personaje para exportar tu aventura.
+              </p>
+              <Button 
+                onClick={() => window.location.href = "/login"}
+                className="w-full sm:w-auto text-xs sm:text-sm min-h-[44px] sm:min-h-[36px]"
+              >
                 Iniciar sesión
               </Button>
             </div>

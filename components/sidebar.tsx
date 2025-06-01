@@ -32,6 +32,32 @@ export function Sidebar({ className }: SidebarProps) {
     setIsOpen(!isOpen)
   }
 
+  // Cerrar sidebar al hacer clic fuera en móvil
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('mobile-sidebar')
+      const button = document.getElementById('sidebar-toggle')
+      
+      if (isOpen && sidebar && !sidebar.contains(event.target as Node) && 
+          button && !button.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      // Prevenir scroll del body cuando el sidebar está abierto en móvil
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
   // Cargar información del usuario autenticado
   useEffect(() => {
     const loadUserData = async () => {
@@ -122,51 +148,71 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <>
-      <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50" onClick={toggleSidebar}>
+      {/* Botón toggle para móvil */}
+      <Button 
+        id="sidebar-toggle"
+        variant="ghost" 
+        size="icon" 
+        className="lg:hidden fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm" 
+        onClick={toggleSidebar}
+      >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
+      {/* Overlay para móvil */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
       <div
+        id="mobile-sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full",
           className,
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6">
-            <h2 className="text-2xl font-bold flex items-center">
-              <Shield className="mr-2 h-6 w-6" />
-              {t('sidebar.pathbuilder')}
+          {/* Header del sidebar */}
+          <div className="p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center">
+              <Shield className="mr-2 h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+              <span className="truncate">{t('sidebar.pathbuilder')}</span>
             </h2>
           </div>
-          <div className="flex-1 px-4 space-y-1 overflow-auto">
+          
+          {/* Navegación */}
+          <div className="flex-1 px-3 sm:px-4 space-y-1 overflow-auto">
             {routes.map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
                 className={cn(
-                  "flex items-center py-3 px-4 text-sm rounded-md transition-colors",
+                  "flex items-center py-2.5 sm:py-3 px-3 sm:px-4 text-sm rounded-md transition-colors",
                   route.active
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
                 onClick={() => setIsOpen(false)}
               >
-                <route.icon className="mr-3 h-5 w-5" />
-                {route.label}
+                <route.icon className="mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="truncate">{route.label}</span>
               </Link>
             ))}
           </div>
           
           {/* Sección del usuario */}
-          <div className="p-4 border-t border-border">
+          <div className="p-3 sm:p-4 border-t border-border">
             {isLoading ? (
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
-                <div className="ml-3">
-                  <div className="h-4 bg-muted rounded animate-pulse mb-1"></div>
-                  <div className="h-3 bg-muted rounded animate-pulse w-20"></div>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted animate-pulse flex-shrink-0"></div>
+                <div className="ml-3 flex-1 min-w-0">
+                  <div className="h-3 sm:h-4 bg-muted rounded animate-pulse mb-1"></div>
+                  <div className="h-2 sm:h-3 bg-muted rounded animate-pulse w-16 sm:w-20"></div>
                 </div>
               </div>
             ) : user ? (
@@ -176,17 +222,17 @@ export function Sidebar({ className }: SidebarProps) {
                     <Image 
                       src={user.avatar_url} 
                       alt={user.username || "Usuario"} 
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs sm:text-sm flex-shrink-0">
                       {getUserInitials(user.username || "U")}
                     </div>
                   )}
                   <div className="ml-3 flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-xs sm:text-sm font-medium truncate">
                       {user.username || "Usuario"}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -199,21 +245,21 @@ export function Sidebar({ className }: SidebarProps) {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground text-xs sm:text-sm"
                   onClick={handleSignOut}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('sidebar.signOut')}
+                  <LogOut className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{t('sidebar.signOut')}</span>
                 </Button>
               </div>
             ) : (
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <User className="h-5 w-5 text-muted-foreground" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium">{t('sidebar.notAuthenticated')}</p>
-                  <p className="text-xs text-muted-foreground">{t('sidebar.signIn')}</p>
+                <div className="ml-3 flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium truncate">{t('sidebar.notAuthenticated')}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t('sidebar.signIn')}</p>
                 </div>
               </div>
             )}

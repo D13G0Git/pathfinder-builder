@@ -226,8 +226,14 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
     try {
       const pathfinderCharacter = generatePathfinderCharacter(character, decisions)
       
-      // Crear un blob con el JSON
-      const blob = new Blob([JSON.stringify(pathfinderCharacter, null, 2)], {
+      // Exportar la estructura completa con success y build (como jsonformatter.json)
+      const exportData = {
+        success: pathfinderCharacter.success,
+        build: pathfinderCharacter.build
+      }
+      
+      // Crear un blob con la estructura completa
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: "application/json"
       })
       
@@ -235,7 +241,7 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `${character.name.replace(/\s+/g, "_")}.json`
+      link.download = `${character.name.replace(/\s+/g, "_")}_foundry_build.json`
       
       // Simular un clic para descargar el archivo
       document.body.appendChild(link)
@@ -246,8 +252,8 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
       URL.revokeObjectURL(url)
       
       toast({
-        title: "Personaje exportado",
-        description: "El archivo JSON de tu personaje ha sido generado correctamente."
+        title: "Build de Foundry VTT exportada",
+        description: "El archivo JSON se puede importar directamente en Foundry VTT usando el Pathfinder Character Builder."
       })
     } catch (error) {
       console.error("Error al exportar el personaje:", error)
@@ -315,7 +321,7 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
         <DialogHeader>
           <DialogTitle>Exportar personaje</DialogTitle>
           <DialogDescription>
-            Tu aventura ha terminado. Ahora puedes exportar tu personaje para usarlo en Foundry VTT o guardarlo para futuras aventuras.
+            Tu aventura ha terminado. Ahora puedes exportar tu personaje para usarlo directamente en Foundry VTT o guardarlo para futuras aventuras.
           </DialogDescription>
         </DialogHeader>
         
@@ -327,6 +333,11 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
               Tu personaje ha sido formado por {decisions.length} decisiones tomadas durante la aventura.
             </p>
           </div>
+          <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              <strong>💡 Tip:</strong> El archivo JSON exportado contiene solo la build de Foundry VTT y puede ser importado directamente usando el Pathfinder Character Builder en Foundry VTT.
+            </p>
+          </div>
         </div>
         
         <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -336,7 +347,7 @@ export function CharacterExport({ character, decisions, onSave }: CharacterExpor
             className="w-full sm:w-auto flex gap-2 items-center"
           >
             <Download size={16} />
-            Exportar JSON
+            Exportar para Foundry VTT
           </Button>
           <Button 
             onClick={handleSaveToDatabase}

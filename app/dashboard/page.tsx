@@ -140,19 +140,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="container mx-auto p-6">
+    <main className="container mx-auto p-3 sm:p-4 lg:p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           {t('dashboard.welcome').replace('{name}', user?.email?.split('@')[0] || 'Usuario')}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base">
           {t('dashboard.subtitle')}
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.characters')}</CardTitle>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.averageLevel')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -198,62 +198,67 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
         {/* Personajes Recientes */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sword className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Sword className="h-4 w-4 sm:h-5 sm:w-5" />
               {t('dashboard.recentCharacters')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {t('dashboard.latestHeroes')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {characters.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
+              <div className="text-center py-6 sm:py-8">
+                <Users className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
                   {t('dashboard.noCharactersYet')}
                 </p>
-                <Button onClick={() => router.push("/character-create")}>
+                <Button 
+                  onClick={() => router.push("/character-create")}
+                  className="text-sm"
+                >
                   {t('dashboard.createFirstCharacterBtn')}
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {characters.map((character) => (
                   <div 
                     key={character.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                     onClick={() => router.push(`/characters/${character.id}`)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                         {character.avatar ? (
                           <img 
                             src={character.avatar} 
                             alt={character.name}
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <Sword className="h-5 w-5 text-muted-foreground" />
+                          <Sword className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium">{character.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm sm:text-base truncate">{character.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
                           {character.race} {character.class} - {t('dashboard.level')} {character.level}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline">{t('dashboard.level')} {character.level}</Badge>
+                    <Badge variant="outline" className="text-xs flex-shrink-0">
+                      {t('dashboard.level')} {character.level}
+                    </Badge>
                   </div>
                 ))}
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm"
                   onClick={() => router.push("/characters")}
                 >
                   {t('dashboard.viewAllCharacters')}
@@ -266,44 +271,46 @@ export default function DashboardPage() {
         {/* Aventuras Activas */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gamepad2 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5" />
               {t('dashboard.activeAdventures')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {t('dashboard.storiesInProgress')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {adventures.length === 0 ? (
-              <div className="text-center py-8">
-                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
+              <div className="text-center py-6 sm:py-8">
+                <Star className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
                   {t('dashboard.noActiveAdventures')}
                 </p>
                 <Button 
                   onClick={() => router.push("/adventures")}
                   disabled={characters.length === 0}
+                  className="text-sm"
                 >
                   {characters.length === 0 ? t('dashboard.needCharacterFirst') : t('dashboard.startAdventure')}
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {adventures.map((adventure) => (
                   <div 
                     key={adventure.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                     onClick={() => router.push(`/game?adventure=${adventure.id}`)}
                   >
-                    <div>
-                      <p className="font-medium">{adventure.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm sm:text-base truncate">{adventure.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {t('dashboard.stage')} {adventure.current_stage} {t('dashboard.of')} {adventure.total_stages}
                       </p>
                     </div>
                     <Badge 
                       variant={adventure.status === 'completed' ? 'default' : 'secondary'}
+                      className="text-xs flex-shrink-0"
                     >
                       {adventure.status === 'completed' ? t('dashboard.completed') : t('dashboard.inProgressStatus')}
                     </Badge>
@@ -311,7 +318,7 @@ export default function DashboardPage() {
                 ))}
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm"
                   onClick={() => router.push("/adventures")}
                 >
                   {t('dashboard.viewAllAdventures')}
@@ -323,41 +330,41 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <Card className="mt-8">
+      <Card className="mt-6 sm:mt-8">
         <CardHeader>
-          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">{t('dashboard.quickActions')}</CardTitle>
+          <CardDescription className="text-sm">
             {t('dashboard.quickActionsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Button 
               onClick={() => router.push("/character-create")}
-              className="h-24 flex flex-col gap-2"
+              className="h-20 sm:h-24 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
             >
-              <Sword className="h-6 w-6" />
-              <span>{t('dashboard.createCharacter')}</span>
+              <Sword className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-center leading-tight">{t('dashboard.createCharacter')}</span>
             </Button>
             
             <Button 
               variant="outline"
               onClick={() => router.push("/characters")}
-              className="h-24 flex flex-col gap-2"
+              className="h-20 sm:h-24 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
               disabled={characters.length === 0}
             >
-              <Users className="h-6 w-6" />
-              <span>{t('dashboard.myCharacters')}</span>
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-center leading-tight">{t('dashboard.myCharacters')}</span>
             </Button>
             
             <Button 
               variant="outline"
               onClick={() => router.push("/adventures")}
-              className="h-24 flex flex-col gap-2"
+              className="h-20 sm:h-24 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
               disabled={characters.length === 0}
             >
-              <Gamepad2 className="h-6 w-6" />
-              <span>{t('dashboard.adventuresBtn')}</span>
+              <Gamepad2 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-center leading-tight">{t('dashboard.adventuresBtn')}</span>
             </Button>
 
             <Button 
@@ -374,10 +381,10 @@ export default function DashboardPage() {
                 console.log('🎯 [Tutorial] Iniciando tutorial...') // Debug
                 startTutorial()
               }}
-              className="h-24 flex flex-col gap-2"
+              className="h-20 sm:h-24 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
             >
-              <Star className="h-6 w-6" />
-              <span>{t('settings.tutorial.start')}</span>
+              <Star className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-center leading-tight">{t('settings.tutorial.start')}</span>
             </Button>
           </div>
         </CardContent>

@@ -410,26 +410,26 @@ export function CharacterCreationForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-xl">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Crear Nuevo Personaje</CardTitle>
-          <CardDescription className="text-center">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-sm sm:max-w-md lg:max-w-xl">
+        <CardHeader className="space-y-1 px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-center">Crear Nuevo Personaje</CardTitle>
+          <CardDescription className="text-center text-sm">
             Crea tu personaje para comenzar tu aventura en Pathfinder 2e
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="manual">Crear Manualmente</TabsTrigger>
-              <TabsTrigger value="import">Importar JSON</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+              <TabsTrigger value="manual" className="text-xs sm:text-sm">Crear Manualmente</TabsTrigger>
+              <TabsTrigger value="import" className="text-xs sm:text-sm">Importar JSON</TabsTrigger>
             </TabsList>
             
             <TabsContent value="manual">
               <form onSubmit={handleSubmit}>
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="name">Nombre del Personaje</Label>
+                    <Label htmlFor="name" className="text-sm">Nombre del Personaje</Label>
                     <Input 
                       id="name" 
                       name="name"
@@ -437,16 +437,17 @@ export function CharacterCreationForm() {
                       required 
                       value={characterData.name}
                       onChange={handleInputChange}
+                      className="h-9 sm:h-10"
                     />
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label htmlFor="race">Raza</Label>
+                    <Label htmlFor="race" className="text-sm">Raza</Label>
                     <Select 
                       value={characterData.race} 
                       onValueChange={(value) => handleSelectChange("race", value)}
                     >
-                      <SelectTrigger id="race">
+                      <SelectTrigger id="race" className="h-9 sm:h-10">
                         <SelectValue placeholder="Selecciona una raza" />
                       </SelectTrigger>
                       <SelectContent>
@@ -460,12 +461,12 @@ export function CharacterCreationForm() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label htmlFor="class">Clase</Label>
+                    <Label htmlFor="class" className="text-sm">Clase</Label>
                     <Select 
                       value={characterData.class} 
                       onValueChange={(value) => handleSelectChange("class", value)}
                     >
-                      <SelectTrigger id="class">
+                      <SelectTrigger id="class" className="h-9 sm:h-10">
                         <SelectValue placeholder="Selecciona una clase" />
                       </SelectTrigger>
                       <SelectContent>
@@ -479,12 +480,12 @@ export function CharacterCreationForm() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label htmlFor="gender">Género</Label>
+                    <Label htmlFor="gender" className="text-sm">Género</Label>
                     <Select 
                       value={characterData.gender} 
                       onValueChange={(value) => handleSelectChange("gender", value)}
                     >
-                      <SelectTrigger id="gender">
+                      <SelectTrigger id="gender" className="h-9 sm:h-10">
                         <SelectValue placeholder="Selecciona un género" />
                       </SelectTrigger>
                       <SelectContent>
@@ -498,18 +499,19 @@ export function CharacterCreationForm() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="avatar">Avatar</Label>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      <Label htmlFor="avatar" className="text-sm">Avatar</Label>
                       <Button 
                         type="button" 
                         variant="outline" 
                         onClick={generateCharacterImage}
                         disabled={isGeneratingImage || !characterData.name}
                         size="sm"
+                        className="text-xs sm:text-sm h-8 sm:h-9"
                       >
                         {isGeneratingImage ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                             Generando...
                           </>
                         ) : "Generar imagen"}
@@ -517,7 +519,7 @@ export function CharacterCreationForm() {
                     </div>
                     
                     {characterData.avatar ? (
-                      <div className="relative w-full h-64 border rounded-md overflow-hidden">
+                      <div className="relative w-full h-48 sm:h-64 border rounded-md overflow-hidden">
                         <Image 
                           src={characterData.avatar} 
                           alt="Avatar del personaje"
@@ -526,8 +528,8 @@ export function CharacterCreationForm() {
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-64 border rounded-md flex items-center justify-center bg-muted">
-                        <p className="text-muted-foreground text-center px-4">
+                      <div className="w-full h-48 sm:h-64 border rounded-md flex items-center justify-center bg-muted">
+                        <p className="text-muted-foreground text-center px-4 text-sm">
                           {isGeneratingImage 
                             ? "Generando y subiendo imagen..." 
                             : "Genera una imagen para tu personaje o sube una propia"}
@@ -543,10 +545,11 @@ export function CharacterCreationForm() {
                       type="file" 
                       accept="image/*"
                       onChange={handleAvatarChange}
+                      className="h-9 sm:h-10"
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full h-10 sm:h-11 text-sm" disabled={isLoading}>
                     {isLoading ? "Creando personaje..." : "Crear Personaje"}
                   </Button>
                 </div>
@@ -554,15 +557,16 @@ export function CharacterCreationForm() {
             </TabsContent>
             
             <TabsContent value="import">
-              <div className="grid gap-6">
+              <div className="grid gap-4 sm:gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="jsonFile">Archivo JSON de Pathfinder</Label>
+                  <Label htmlFor="jsonFile" className="text-sm">Archivo JSON de Pathfinder</Label>
                   <Input 
                     id="jsonFile" 
                     type="file" 
                     accept=".json"
                     ref={fileInputRef}
                     onChange={handleJsonImport}
+                    className="h-9 sm:h-10"
                   />
                   <p className="text-xs text-muted-foreground">
                     Importa un archivo JSON de personaje creado en Pathfinder Builder 2e
@@ -571,22 +575,25 @@ export function CharacterCreationForm() {
                 
                 {jsonError && (
                   <Alert variant="destructive">
-                    <AlertDescription>{jsonError}</AlertDescription>
+                    <AlertDescription className="text-sm">{jsonError}</AlertDescription>
                   </Alert>
                 )}
                 
                 {importedCharacter && (
-                  <div className="border p-4 rounded-md bg-muted">
-                    <h3 className="font-semibold mb-2">Personaje Detectado:</h3>
-                    <p><strong>Nombre:</strong> {importedCharacter.build.name}</p>
-                    <p><strong>Clase:</strong> {importedCharacter.build.class}</p>
-                    <p><strong>Raza:</strong> {importedCharacter.build.ancestry}</p>
-                    <p><strong>Nivel:</strong> {importedCharacter.build.level}</p>
-                    <div className="flex gap-2 mt-4">
+                  <div className="border p-3 sm:p-4 rounded-md bg-muted">
+                    <h3 className="font-semibold mb-2 text-sm sm:text-base">Personaje Detectado:</h3>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Nombre:</strong> {importedCharacter.build.name}</p>
+                      <p><strong>Clase:</strong> {importedCharacter.build.class}</p>
+                      <p><strong>Raza:</strong> {importedCharacter.build.ancestry}</p>
+                      <p><strong>Nivel:</strong> {importedCharacter.build.level}</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={resetJsonImport}
+                        className="h-9 sm:h-10 text-sm"
                       >
                         Cancelar
                       </Button>
@@ -595,21 +602,11 @@ export function CharacterCreationForm() {
                         variant="default"
                         onClick={handleSubmit}
                         disabled={isLoading}
+                        className="h-9 sm:h-10 text-sm"
                       >
                         {isLoading ? "Importando..." : "Importar Personaje"}
                       </Button>
                     </div>
-                  </div>
-                )}
-                
-                {!importedCharacter && (
-                  <div className="border p-4 rounded-md bg-muted">
-                    <h3 className="font-semibold mb-2">Instrucciones:</h3>
-                    <ol className="list-decimal pl-5 space-y-1">
-                      <li>Crea tu personaje en Pathfinder Builder 2e</li>
-                      <li>Exporta el personaje como archivo JSON</li>
-                      <li>Selecciona el archivo JSON aquí para importarlo</li>
-                    </ol>
                   </div>
                 )}
               </div>
