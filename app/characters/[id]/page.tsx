@@ -178,6 +178,44 @@ export default function CharacterDetailsPage() {
     }
   }
 
+  // Función para descargar la imagen del avatar
+  const handleDownloadAvatar = async () => {
+    if (!character?.avatar) {
+      toast.error("No hay imagen de avatar disponible para descargar")
+      return
+    }
+
+    try {
+      // Crear un canvas para convertir la imagen
+      const response = await fetch(character.avatar)
+      const blob = await response.blob()
+      
+      // Crear un URL temporal para la descarga
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      // Obtener la extensión del archivo desde la URL o usar png por defecto
+      const urlPath = new URL(character.avatar).pathname
+      const extension = urlPath.split('.').pop() || 'png'
+      link.download = `${character.name.replace(/\s+/g, '_')}_avatar.${extension}`
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success("Imagen descargada", {
+        description: "La imagen del avatar se ha descargado exitosamente."
+      })
+    } catch (error) {
+      console.error("Error al descargar la imagen:", error)
+      toast.error("Error al descargar", {
+        description: "No se pudo descargar la imagen del avatar."
+      })
+    }
+  }
+
   // Función para exportar datos de Foundry
   const handleExportFoundry = (adventure: Adventure) => {
     if (!adventure.result_data) {
@@ -463,13 +501,26 @@ export default function CharacterDetailsPage() {
         <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {character.avatar && (
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg mx-auto sm:mx-0 flex-shrink-0">
-                <Image
-                  src={character.avatar}
-                  alt={character.name}
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative group">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-lg mx-auto sm:mx-0 flex-shrink-0">
+                  <Image
+                    src={character.avatar}
+                    alt={character.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                {/* Botón de descarga flotante */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDownloadAvatar}
+                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-lg text-xs px-2 py-1 h-7"
+                  title="Descargar imagen del avatar"
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  Descargar
+                </Button>
               </div>
             )}
             <div className="flex-1 text-center sm:text-left min-w-0">
@@ -488,6 +539,20 @@ export default function CharacterDetailsPage() {
                   Creado {new Date(character.created_at).toLocaleDateString()}
                 </Badge>
               </div>
+              {/* Botón de descarga alternativo para móviles (visible en pantallas pequeñas) */}
+              {character.avatar && (
+                <div className="sm:hidden mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleDownloadAvatar}
+                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs w-full"
+                  >
+                    <Download className="h-3 w-3 mr-2" />
+                    Descargar Imagen del Avatar
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
